@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  MUSICIAN
+  RECRUITER
+  ADMIN
+}
+
+// Discriminator for the extensible "profile" model. V1 only ever creates
+// MUSICIAN profiles; DJ/DANCER/LIGHTING_TECH are added in V2 by adding a
+// new enum value + a new 1-1 extension table (see MusicianProfile below),
+// without touching Venue/Certification/ContactRequest/Review/MediaItem.
+enum ProfileType {
+  MUSICIAN
+}
+
+enum ProfileStatus {
+  DRAFT
+  PUBLISHED
+  SUSPENDED
+}
+
+enum MediaType {
+  PHOTO
+  VIDEO
+  AUDIO_LINK
+  EXTERNAL_LINK
+}
+
+enum MediaProvider {
+  UPLOAD
+  SPOTIFY
+  YOUTUBE
+  SOUNDCLOUD
+  INSTAGRAM
+  OTHER
+}
+
+enum CertificationStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  EXPIRED
+}
+
+enum ContactRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum ConsentType {
+  PUBLIC_PROFILE
+  CONTACT_SHARING
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  passwordHash    String
+  role            UserRole
+  phone           String? // never exposed publicly, only via ContactDisclosure
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  profile                 Profile? // present when role = MUSICIAN (V2: also DJ/DANCER/...)
+  venuesOwned             Venue[]                   @relation("VenueContact")
+  contactRequestsSent     ContactRequest[]          @relation("RecruiterRequests")
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  consents                Consent[]
+
+  @@map("users")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+// RGPD: explicit, timestamped consent trail (public profile display,
+// sharing contact details), kept even if the user later revokes it.
+model Consent {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ConsentType
+  granted   Boolean
+  ipAddress String?
+  createdAt DateTime    @default(now())
+
+  @@map("consents")
+}
+
+// ---------------------------------------------------------------------------
+// Profiles (extensible by profile type)
+// ---------------------------------------------------------------------------
+
+// Generic "performer" profile shared by every profile type. Search, media,
+// availability, certifications, reviews and contact requests all point here
+// rather than at MusicianProfile directly, so V2 profile types plug in by
+// adding a new extension table + enum value only.
+model Profile {
+  id               String        @id @default(uuid())
+  userId           String        @unique
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileType      ProfileType
+  displayName      String
+  bio              String?
+  city             String?
+  mobilityRadiusKm Int?
+  rateMin          Int?
+  rateMax          Int?
+  rateCurrency     String        @default("EUR")
+  status           ProfileStatus @default(DRAFT)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  musicianProfile MusicianProfile?
+  media           MediaItem[]
+  availabilities  Availability[]
+  certifications  Certification[]
+  contactRequests ContactRequest[] @relation("MusicianRequests")
+
+  @@map("profiles")
+}
+
+// 1-1 extension of Profile, only present when profileType = MUSICIAN.
+// V2 adds DjProfile / DancerProfile / LightingTechProfile the same way.
+model MusicianProfile {
+  profileId String  @id
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  styles      MusicianStyle[]
+  instruments MusicianInstrument[]
+
+  @@map("musician_profiles")
+}
+
+model MusicalStyle {
+  id   String @id @default(uuid())
+  name String @unique
+
+  musicians MusicianStyle[]
+
+  @@map("musical_styles")
+}
+
+model MusicianStyle {
+  musicianProfileId String
+  musicianProfile   MusicianProfile @relation(fields: [musicianProfileId], references: [profileId], onDelete: Cascade)
+  styleId           String
+  style             MusicalStyle    @relation(fields: [styleId], references: [id], onDelete: Cascade)
+
+  @@id([musicianProfileId, styleId])
+  @@map("musician_styles")
+}
+
+model Instrument {
+  id   String @id @default(uuid())
+  name String @unique
+
+  musicians MusicianInstrument[]
+
+  @@map("instruments")
+}
+
+model MusicianInstrument {
+  musicianProfileId String
+  musicianProfile   MusicianProfile @relation(fields: [musicianProfileId], references: [profileId], onDelete: Cascade)
+  instrumentId      String
+  instrument        Instrument      @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
+
+  @@id([musicianProfileId, instrumentId])
+  @@map("musician_instruments")
+}
+
+model Availability {
+  id          String   @id @default(uuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  startDate   DateTime @db.Date
+  endDate     DateTime @db.Date
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("availabilities")
+}
+
+model MediaItem {
+  id        String        @id @default(uuid())
+  profileId String
+  profile   Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  type      MediaType
+  provider  MediaProvider @default(UPLOAD)
+  url       String
+  isCover   Boolean       @default(false)
+  position  Int           @default(0)
+  createdAt DateTime      @default(now())
+
+  @@map("media_items")
+}
+
+// ---------------------------------------------------------------------------
+// Venues & certifications
+// ---------------------------------------------------------------------------
+
+model Venue {
+  id            String   @id @default(uuid())
+  name          String
+  address       String?
+  city          String?
+  description   String?
+  contactUserId String
+  contactUser   User     @relation("VenueContact", fields: [contactUserId], references: [id])
+  createdAt     DateTime @default(now())
+
+  certifications Certification[]
+
+  @@map("venues")
+}
+
+// Anti-abuse flow: the musician creates a PENDING row with a unique
+// inviteToken and sends it to the venue. Nothing is public until an
+// authenticated recruiter user linked to that venue opens the link and
+// confirms, which sets venueId + status = CONFIRMED. claimedVenueName lets
+// the UI show "awaiting confirmation from X" before the venue has an
+// account of its own.
+model Certification {
+  id                String              @id @default(uuid())
+  profileId         String
+  profile           Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  venueId           String?
+  venue             Venue?              @relation(fields: [venueId], references: [id])
+  claimedVenueName  String?
+  inviteToken       String              @unique
+  performanceDate   DateTime?           @db.Date
+  status            CertificationStatus @default(PENDING)
+  confirmedAt       DateTime?
+  confirmedByUserId String?
+  expiresAt         DateTime?
+  createdAt         DateTime            @default(now())
+
+  review Review?
+
+  @@map("certifications")
+}
+
+// One review per confirmed certification, left by the venue.
+model Review {
+  id              String        @id @default(uuid())
+  certificationId String        @unique
+  certification   Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+  rating          Int
+  comment         String?
+  createdAt       DateTime      @default(now())
+
+  @@map("reviews")
+}
+
+// ---------------------------------------------------------------------------
+// Contact / messaging
+// ---------------------------------------------------------------------------
+
+model ContactRequest {
+  id          String                @id @default(uuid())
+  recruiterId String
+  recruiter   User                  @relation("RecruiterRequests", fields: [recruiterId], references: [id])
+  profileId   String
+  profile     Profile               @relation("MusicianRequests", fields: [profileId], references: [id])
+  message     String
+  status      ContactRequestStatus  @default(PENDING)
+  createdAt   DateTime              @default(now())
+  respondedAt DateTime?
+
+  disclosures ContactDisclosure[]
+
+  @@map("contact_requests")
+}
+
+// RGPD traceability: records exactly which field (phone/email) was
+// disclosed to the recruiter and when, once the musician accepts.
+model ContactDisclosure {
+  id                String         @id @default(uuid())
+  contactRequestId  String
+  contactRequest    ContactRequest @relation(fields: [contactRequestId], references: [id], onDelete: Cascade)
+  disclosedField    String
+  disclosedAt       DateTime       @default(now())
+
+  @@map("contact_disclosures")
+}
