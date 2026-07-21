@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: giglink
+      POSTGRES_PASSWORD: giglink
+      POSTGRES_DB: giglink
+    ports:
+      - "5432:5432"
+    volumes:
+      - giglink-db-data:/var/lib/postgresql/data
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "1026:1025"
+      - "8026:8025"
+
+  server:
+    image: node:20
+    working_dir: /app
+    command: sh -c "npm install && npx prisma migrate deploy && npx prisma generate && npm run dev"
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    environment:
+      DATABASE_URL: postgresql://giglink:giglink@db:5432/giglink
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+    volumes:
+      - ./server:/app
+      - giglink-server-node-modules:/app/node_modules
+      - ./server/uploads:/app/uploads
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+      - mailpit
+
+  client:
+    image: node:20
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    restart: unless-stopped
+    environment:
+      API_PROXY_TARGET: http://server:4000
+    volumes:
+      - ./client:/app
+      - giglink-client-node-modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+
+volumes:
+  giglink-db-data:
+  giglink-server-node-modules:
+  giglink-client-node-modules:

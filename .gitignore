@@ -8,3 +8,13 @@ build/
 .DS_Store
 coverage/
 server/prisma/dev.db
+
+# Ancienne copie de l'app mobile (l'app réelle vit dans ~/GigLinkMobile)
+/mobile/
+# Sorties de build PWA
+client/dev-dist/
+# Fichiers uploadés (contenu utilisateur)
+server/uploads/*
+!server/uploads/.gitkeep
+# Config outillage local
+.claude/

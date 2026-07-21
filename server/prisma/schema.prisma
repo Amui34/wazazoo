@@ -17,12 +17,14 @@ enum UserRole {
   ADMIN
 }
 
-// Discriminator for the extensible "profile" model. V1 only ever creates
-// MUSICIAN profiles; DJ/DANCER/LIGHTING_TECH are added in V2 by adding a
-// new enum value + a new 1-1 extension table (see MusicianProfile below),
-// without touching Venue/Certification/ContactRequest/Review/MediaItem.
+// Discriminator for the extensible "profile" model. V1 only ever created
+// MUSICIAN profiles; DJ was added in V2 by adding a new enum value + a new
+// 1-1 extension table (see DjProfile below), without touching
+// Venue/Certification/ContactRequest/Review/MediaItem. DANCER/LIGHTING_TECH
+// can be added the same way later.
 enum ProfileType {
   MUSICIAN
+  DJ
 }
 
 enum ProfileStatus {
@@ -61,6 +63,7 @@ enum ContactRequestStatus {
 }
 
 enum ConsentType {
+  TERMS
   PUBLIC_PROFILE
   CONTACT_SHARING
 }
@@ -80,11 +83,13 @@ model User {
   updatedAt       DateTime  @updatedAt
 
   profile                 Profile? // present when role = MUSICIAN (V2: also DJ/DANCER/...)
-  venuesOwned             Venue[]                   @relation("VenueContact")
-  contactRequestsSent     ContactRequest[]          @relation("RecruiterRequests")
+  venuesOwned             Venue[]                  @relation("VenueContact")
+  contactRequestsSent     ContactRequest[]         @relation("RecruiterRequests")
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   consents                Consent[]
+  contactAccessLogs       ContactAccessLog[]       @relation("ContactAccessViewer")
+  messagesSent            Message[]                @relation("MessageSender")
 
   @@map("users")
 }
@@ -152,6 +157,7 @@ model Profile {
   updatedAt        DateTime      @updatedAt
 
   musicianProfile MusicianProfile?
+  djProfile       DjProfile?
   media           MediaItem[]
   availabilities  Availability[]
   certifications  Certification[]
@@ -172,13 +178,38 @@ model MusicianProfile {
   @@map("musician_profiles")
 }
 
+// 1-1 extension of Profile, only present when profileType = DJ. Mirrors
+// MusicianProfile's pattern: shares the same MusicalStyle taxonomy (genres),
+// plus a free-text field for gear/setup since a fixed equipment list would
+// go stale fast.
+model DjProfile {
+  profileId      String  @id
+  profile        Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  equipmentNotes String?
+
+  styles DjStyle[]
+
+  @@map("dj_profiles")
+}
+
 model MusicalStyle {
   id   String @id @default(uuid())
   name String @unique
 
   musicians MusicianStyle[]
+  djs       DjStyle[]
 
   @@map("musical_styles")
+}
+
+model DjStyle {
+  djProfileId String
+  djProfile   DjProfile    @relation(fields: [djProfileId], references: [profileId], onDelete: Cascade)
+  styleId     String
+  style       MusicalStyle @relation(fields: [styleId], references: [id], onDelete: Cascade)
+
+  @@id([djProfileId, styleId])
+  @@map("dj_styles")
 }
 
 model MusicianStyle {
@@ -298,29 +329,61 @@ model Review {
 // ---------------------------------------------------------------------------
 
 model ContactRequest {
-  id          String                @id @default(uuid())
+  id          String               @id @default(uuid())
   recruiterId String
-  recruiter   User                  @relation("RecruiterRequests", fields: [recruiterId], references: [id])
+  recruiter   User                 @relation("RecruiterRequests", fields: [recruiterId], references: [id])
   profileId   String
-  profile     Profile               @relation("MusicianRequests", fields: [profileId], references: [id])
+  profile     Profile              @relation("MusicianRequests", fields: [profileId], references: [id])
   message     String
-  status      ContactRequestStatus  @default(PENDING)
-  createdAt   DateTime              @default(now())
+  status      ContactRequestStatus @default(PENDING)
+  createdAt   DateTime             @default(now())
   respondedAt DateTime?
 
   disclosures ContactDisclosure[]
+  messages    Message[]
 
   @@map("contact_requests")
+}
+
+// Messagerie : conversation liée à une demande de contact acceptée.
+// Les deux parties (recruteur + musicien) peuvent échanger.
+model Message {
+  id               String         @id @default(uuid())
+  contactRequestId String
+  contactRequest   ContactRequest @relation(fields: [contactRequestId], references: [id], onDelete: Cascade)
+  senderUserId     String
+  sender           User           @relation("MessageSender", fields: [senderUserId], references: [id])
+  body             String
+  createdAt        DateTime       @default(now())
+  readAt           DateTime?
+
+  @@index([contactRequestId])
+  @@map("messages")
 }
 
 // RGPD traceability: records exactly which field (phone/email) was
 // disclosed to the recruiter and when, once the musician accepts.
 model ContactDisclosure {
-  id                String         @id @default(uuid())
-  contactRequestId  String
-  contactRequest    ContactRequest @relation(fields: [contactRequestId], references: [id], onDelete: Cascade)
-  disclosedField    String
-  disclosedAt       DateTime       @default(now())
+  id               String         @id @default(uuid())
+  contactRequestId String
+  contactRequest   ContactRequest @relation(fields: [contactRequestId], references: [id], onDelete: Cascade)
+  disclosedField   String
+  disclosedAt      DateTime       @default(now())
 
   @@map("contact_disclosures")
+}
+
+// RGPD access log: records each time a recruiter actually views a
+// musician's disclosed contact details (who, which request, when, from where).
+model ContactAccessLog {
+  id               String   @id @default(uuid())
+  contactRequestId String
+  viewerUserId     String
+  viewer           User     @relation("ContactAccessViewer", fields: [viewerUserId], references: [id], onDelete: Cascade)
+  ipAddress        String?
+  accessedAt       DateTime @default(now())
+
+  @@index([contactRequestId])
+  @@index([viewerUserId])
+  @@map("contact_access_logs")
 }
