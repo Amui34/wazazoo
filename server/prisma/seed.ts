@@ -265,6 +265,7 @@ const MUSICIANS = [
   // --- Groupes / formations ---
   {
     email: "contact@lesnuitsfauves.demo.giglink.app",
+    isGroup: true,
     displayName: "Les Nuits Fauves",
     bio: "Groupe pop-rock électro à 5 musiciens. Show énergique avec batterie live, synthés et section chant. Idéal soirées d'entreprise et festivals.",
     city: "Paris",
@@ -279,6 +280,7 @@ const MUSICIANS = [
   },
   {
     email: "booking@brassrepublik.demo.giglink.app",
+    isGroup: true,
     displayName: "Brass Républik",
     bio: "Fanfare funk-soul de 7 cuivres. Déambulation ou set sur scène, groove garanti pour mariages, inaugurations et carnavals.",
     city: "Lyon",
@@ -293,6 +295,7 @@ const MUSICIANS = [
   },
   {
     email: "contact@cafenoirquartet.demo.giglink.app",
+    isGroup: true,
     displayName: "Café Noir Quartet",
     bio: "Quartet jazz feutré (piano, contrebasse, batterie, voix). Standards et bossa pour cocktails, hôtels et dîners raffinés.",
     city: "Marseille",
@@ -307,6 +310,7 @@ const MUSICIANS = [
   },
   {
     email: "booking@soundsystem92.demo.giglink.app",
+    isGroup: true,
     displayName: "Sound System 92",
     bio: "Collectif reggae / hip-hop, MC + section rythmique + sono. Sets festifs pour soirées, plages et festivals urbains.",
     city: "Nantes",
@@ -321,6 +325,7 @@ const MUSICIANS = [
   },
   {
     email: "contact@electromirage.demo.giglink.app",
+    isGroup: true,
     displayName: "Électro Mirage",
     bio: "Duo électro-pop live : chant, machines et batterie électronique. Ambiance club pour lancements de marque et afterworks.",
     city: "Toulouse",
@@ -335,6 +340,7 @@ const MUSICIANS = [
   },
   {
     email: "contact@velvetcorner.demo.giglink.app",
+    isGroup: true,
     displayName: "The Velvet Corner",
     bio: "Groupe rock-blues à 4. Reprises et compos, son chaleureux à la Stones. Parfait pour bars à concerts et soirées privées.",
     city: "Bordeaux",
@@ -349,6 +355,7 @@ const MUSICIANS = [
   },
   {
     email: "contact@balpopulaire.demo.giglink.app",
+    isGroup: true,
     displayName: "Bal Populaire",
     bio: "Orchestre de bal (accordéon, chant, guitare, cuivres). Guinguette, valse, chanson française et tubes variété pour faire danser tout le monde.",
     city: "Paris",
@@ -411,11 +418,13 @@ async function main() {
         mobilityRadiusKm: musician.mobilityRadiusKm,
         rateMin: musician.rateMin,
         rateMax: musician.rateMax,
+        isGroup: (musician as { isGroup?: boolean }).isGroup ?? false,
         status: "PUBLISHED",
       },
       create: {
         userId: user.id,
         profileType: "MUSICIAN",
+        isGroup: (musician as { isGroup?: boolean }).isGroup ?? false,
         displayName: musician.displayName,
         bio: musician.bio,
         city: musician.city,

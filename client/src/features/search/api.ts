@@ -4,6 +4,7 @@ import type { RefOption } from "../profile/api.js";
 export type SearchResult = {
   id: string;
   profileType: "MUSICIAN" | "DJ";
+  isGroup: boolean;
   displayName: string;
   city: string | null;
   bio: string | null;
@@ -17,9 +18,10 @@ export type SearchResult = {
 };
 
 export async function searchMusicians(filters: {
-  profileType?: "MUSICIAN" | "DJ";
+  kind?: "MUSICIAN" | "GROUP" | "DJ";
   styleId?: string;
   city?: string;
+  date?: string;
   budgetMax?: number;
   minCertifications?: number;
 }) {

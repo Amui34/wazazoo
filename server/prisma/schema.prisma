@@ -145,6 +145,7 @@ model Profile {
   userId           String        @unique
   user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   profileType      ProfileType
+  isGroup          Boolean       @default(false) // true = groupe/formation, false = artiste solo
   displayName      String
   bio              String?
   city             String?

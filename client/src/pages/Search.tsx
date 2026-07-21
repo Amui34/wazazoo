@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "../components/Navbar.js";
@@ -6,7 +6,6 @@ import { StarRating } from "../components/StarRating.js";
 import { AmbientLights } from "../components/AmbientLights.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { searchMusicians } from "../features/search/api.js";
-import { getStyles } from "../features/profile/api.js";
 
 const THEMES = [
   { glow: "group-hover:shadow-violet-500/30", sleeve: "from-violet-600/70 to-fuchsia-600/50", label: "#a78bfa", chip: "border-violet-400/30 bg-violet-500/15 text-violet-200" },
@@ -152,27 +151,32 @@ function SkeletonCard({ delay }: { delay: number }) {
   );
 }
 
-export default function Search() {
-  useDocumentTitle("Trouver un musicien");
-  const [profileType, setProfileType] = useState<"" | "MUSICIAN" | "DJ">("");
-  const [styleId, setStyleId] = useState("");
-  const [city, setCity] = useState("");
-  const [budgetMax, setBudgetMax] = useState("");
-  const [minCertifications, setMinCertifications] = useState("");
+type Filters = { kind: "" | "MUSICIAN" | "GROUP" | "DJ"; city: string; date: string; budgetMax: string };
+const EMPTY: Filters = { kind: "", city: "", date: "", budgetMax: "" };
 
-  const { data: styles = [] } = useQuery({ queryKey: ["styles"], queryFn: getStyles });
+export default function Search() {
+  useDocumentTitle("Trouver un artiste");
+  const [draft, setDraft] = useState<Filters>(EMPTY);
+  const [applied, setApplied] = useState<Filters>(EMPTY);
 
   const { data: results = [], isFetching, isPending } = useQuery({
-    queryKey: ["search", "musicians", profileType, styleId, city, budgetMax, minCertifications],
+    queryKey: ["search", "musicians", applied],
     queryFn: () =>
       searchMusicians({
-        profileType: profileType || undefined,
-        styleId: styleId || undefined,
-        city: city || undefined,
-        budgetMax: budgetMax ? Number(budgetMax) : undefined,
-        minCertifications: minCertifications ? Number(minCertifications) : undefined,
+        kind: applied.kind || undefined,
+        city: applied.city || undefined,
+        date: applied.date || undefined,
+        budgetMax: applied.budgetMax ? Number(applied.budgetMax) : undefined,
       }),
   });
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    setApplied(draft);
+  }
+
+  const fieldCls =
+    "w-full bg-transparent text-sm text-white outline-none placeholder:text-neutral-500";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-neutral-950 text-white">
@@ -182,69 +186,93 @@ export default function Search() {
         <Navbar />
 
         <div className="mx-auto max-w-6xl px-6 py-10">
-          <p className="animate-fade-in-up text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">
-            La crate ♫
-          </p>
-          <h1 className="mt-1 animate-fade-in-up bg-gradient-to-r from-white via-violet-200 to-fuchsia-300 bg-clip-text text-3xl font-bold text-transparent sm:text-4xl">
-            Trouver un artiste
+          <h1 className="max-w-3xl animate-fade-in-up bg-gradient-to-r from-white via-violet-200 to-fuchsia-300 bg-clip-text text-3xl font-bold leading-tight text-transparent sm:text-4xl">
+            Trouvez l'artiste idéal pour votre établissement
           </h1>
-          <p className="mt-1 animate-fade-in-up text-sm text-neutral-400" style={{ animationDelay: "20ms" }}>
-            Musiciens et DJ vérifiés — parcours les pochettes, survole pour révéler le vinyle.
+          <p className="mt-3 max-w-2xl animate-fade-in-up text-base text-neutral-400" style={{ animationDelay: "20ms" }}>
+            Musiciens, DJ et groupes vérifiés pour animer vos soirées, restaurants et événements.
           </p>
 
-          <div className="mt-6 flex animate-fade-in-up gap-2" style={{ animationDelay: "40ms" }}>
-            {(["", "MUSICIAN", "DJ"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setProfileType(t)}
-                className={`rounded-full border px-4 py-1.5 text-sm transition-all duration-200 ${
-                  profileType === t
-                    ? "border-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 font-medium text-white shadow-lg shadow-violet-500/25"
-                    : "border-neutral-700 text-neutral-300 hover:border-violet-400/60 hover:text-white"
-                }`}
-              >
-                {t === "" ? "Tous" : t === "MUSICIAN" ? "Musiciens" : "DJ"}
-              </button>
-            ))}
-          </div>
-
-          <div
-            className="mt-3 grid animate-fade-in-up grid-cols-2 gap-3 sm:grid-cols-4"
-            style={{ animationDelay: "80ms" }}
+          {/* Barre de recherche unifiée */}
+          <form
+            onSubmit={submit}
+            className="mt-7 animate-fade-in-up rounded-2xl border border-neutral-800 bg-neutral-900/60 p-2 shadow-xl shadow-black/30 backdrop-blur sm:flex sm:items-stretch sm:gap-0"
+            style={{ animationDelay: "60ms" }}
           >
-            <select
-              value={styleId}
-              onChange={(e) => setStyleId(e.target.value)}
-              className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white transition-colors duration-200 focus:border-violet-400"
+            <div className="flex-1 rounded-xl px-4 py-2 transition-colors hover:bg-neutral-800/50 sm:border-r sm:border-neutral-800">
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+                Type d'artiste
+              </label>
+              <select
+                value={draft.kind}
+                onChange={(e) => setDraft({ ...draft, kind: e.target.value as Filters["kind"] })}
+                className={`${fieldCls} mt-0.5 cursor-pointer`}
+              >
+                <option value="" className="bg-neutral-900">Tous</option>
+                <option value="MUSICIAN" className="bg-neutral-900">Musiciens (solo)</option>
+                <option value="GROUP" className="bg-neutral-900">Groupes</option>
+                <option value="DJ" className="bg-neutral-900">DJ</option>
+              </select>
+            </div>
+
+            <div className="flex-1 rounded-xl px-4 py-2 transition-colors hover:bg-neutral-800/50 sm:border-r sm:border-neutral-800">
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+                Ville / région
+              </label>
+              <input
+                value={draft.city}
+                onChange={(e) => setDraft({ ...draft, city: e.target.value })}
+                placeholder="Toutes"
+                className={`${fieldCls} mt-0.5`}
+              />
+            </div>
+
+            <div className="flex-1 rounded-xl px-4 py-2 transition-colors hover:bg-neutral-800/50 sm:border-r sm:border-neutral-800">
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+                Date de l'événement
+              </label>
+              <input
+                type="date"
+                value={draft.date}
+                onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+                className={`${fieldCls} mt-0.5 [color-scheme:dark]`}
+              />
+            </div>
+
+            <div className="flex-1 rounded-xl px-4 py-2 transition-colors hover:bg-neutral-800/50">
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+                Budget max
+              </label>
+              <input
+                type="number"
+                value={draft.budgetMax}
+                onChange={(e) => setDraft({ ...draft, budgetMax: e.target.value })}
+                placeholder="€ / prestation"
+                className={`${fieldCls} mt-0.5`}
+              />
+            </div>
+
+            <div className="mt-2 flex items-center sm:mt-0 sm:pl-2">
+              <button
+                type="submit"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:shadow-violet-500/40 sm:w-auto"
+              >
+                <span aria-hidden>🔍</span> Rechercher
+              </button>
+            </div>
+          </form>
+
+          {(applied.kind || applied.city || applied.date || applied.budgetMax) && (
+            <button
+              onClick={() => {
+                setDraft(EMPTY);
+                setApplied(EMPTY);
+              }}
+              className="mt-3 text-xs text-neutral-400 underline underline-offset-2 hover:text-white"
             >
-              <option value="">Tous les styles</option>
-              {styles.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-            <input
-              placeholder="Ville"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition-colors duration-200 focus:border-violet-400"
-            />
-            <input
-              placeholder="Budget max (€)"
-              type="number"
-              value={budgetMax}
-              onChange={(e) => setBudgetMax(e.target.value)}
-              className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition-colors duration-200 focus:border-violet-400"
-            />
-            <input
-              placeholder="Certifications min"
-              type="number"
-              value={minCertifications}
-              onChange={(e) => setMinCertifications(e.target.value)}
-              className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition-colors duration-200 focus:border-violet-400"
-            />
-          </div>
+              Réinitialiser les filtres
+            </button>
+          )}
 
           {!isPending && (
             <p
@@ -252,7 +280,7 @@ export default function Search() {
               style={{ opacity: isFetching ? 0.5 : 1 }}
             >
               <span className="font-medium text-violet-300">{results.length}</span> artiste
-              {results.length !== 1 ? "s" : ""} dans la crate
+              {results.length !== 1 ? "s" : ""} trouvé{results.length !== 1 ? "s" : ""}
             </p>
           )}
 
