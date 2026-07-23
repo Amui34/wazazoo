@@ -653,9 +653,30 @@ async function main() {
     },
   });
 
+  // --- Spots « en live » de démo (carte) ---
+  const LIVE_SPOTS = [
+    { email: "clara.jazz@demo.giglink.app", lat: 48.8606, lng: 2.3376, note: "Set jazz devant le Louvre 🎷" },
+    { email: "malik.guitare@demo.giglink.app", lat: 45.7597, lng: 4.8422, note: "Reprises acoustiques Presqu'île" },
+    { email: "sofia.violon@demo.giglink.app", lat: 43.2951, lng: 5.3746, note: "Violon sur le Vieux-Port" },
+    { email: "amelie.piano@demo.giglink.app", lat: 48.8530, lng: 2.3499, note: "Piano voix, parvis Notre-Dame" },
+    { email: "yanis.traore@demo.giglink.app", lat: 43.6045, lng: 1.4442, note: "Beatbox place du Capitole" },
+    { email: "hugo.faure@demo.giglink.app", lat: 43.2965, lng: 5.3698, note: "Reggae terrasse, cours Julien" },
+  ];
+  const farEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // démo : actif 30 jours
+  for (const s of LIVE_SPOTS) {
+    const u = await prisma.user.findUnique({ where: { email: s.email }, include: { profile: true } });
+    if (!u?.profile) continue;
+    await prisma.liveSpot.upsert({
+      where: { profileId: u.profile.id },
+      update: { lat: s.lat, lng: s.lng, note: s.note, startedAt: new Date(), endsAt: farEnd },
+      create: { profileId: u.profile.id, lat: s.lat, lng: s.lng, note: s.note, endsAt: farEnd },
+    });
+  }
+
   console.log("Seed terminé.");
   console.log(`Mot de passe de tous les comptes de démo : ${DEMO_PASSWORD}`);
   console.log(`${MUSICIANS.length} musiciens, ${DJS.length} DJ, ${RECRUITERS.length} recruteurs/lieux, 1 admin.`);
+  console.log(`${LIVE_SPOTS.length} artistes en live (démo carte).`);
 }
 
 main()

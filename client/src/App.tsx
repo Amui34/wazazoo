@@ -10,6 +10,7 @@ import MusicianPublicProfile from "./pages/MusicianPublicProfile.js";
 import Search from "./pages/Search.js";
 import Dashboard from "./pages/Dashboard.js";
 import Messages from "./pages/Messages.js";
+import MapPage from "./pages/MapPage.js";
 import CertificationConfirm from "./pages/CertificationConfirm.js";
 import NotFound from "./pages/NotFound.js";
 import AdminDashboard from "./pages/AdminDashboard.js";
@@ -64,6 +65,14 @@ export default function App() {
         element={
           <RequireAuth>
             <Messages />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/carte"
+        element={
+          <RequireAuth>
+            <MapPage />
           </RequireAuth>
         }
       />

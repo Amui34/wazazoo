@@ -163,8 +163,25 @@ model Profile {
   availabilities  Availability[]
   certifications  Certification[]
   contactRequests ContactRequest[] @relation("MusicianRequests")
+  liveSpot        LiveSpot?
 
   @@map("profiles")
+}
+
+// Position « en live » d'un artiste de rue : visible sur la carte tant que
+// endsAt n'est pas dépassé. Un artiste n'a qu'un spot actif à la fois.
+model LiveSpot {
+  id        String   @id @default(uuid())
+  profileId String   @unique
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  lat       Float
+  lng       Float
+  note      String?
+  startedAt DateTime @default(now())
+  endsAt    DateTime
+
+  @@index([endsAt])
+  @@map("live_spots")
 }
 
 // 1-1 extension of Profile, only present when profileType = MUSICIAN.

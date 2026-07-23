@@ -14,6 +14,7 @@ import { venuesRouter } from "./modules/venues/venues.routes.js";
 import { certificationsRouter } from "./modules/certifications/certifications.routes.js";
 import { contactRequestsRouter } from "./modules/contact-requests/contact-requests.routes.js";
 import { messagesRouter } from "./modules/messages/messages.routes.js";
+import { liveRouter } from "./modules/live/live.routes.js";
 import { adminRouter } from "./modules/admin/admin.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { apiRateLimit } from "./middleware/rateLimit.js";
@@ -62,6 +63,7 @@ export function createApp() {
   app.use("/api/certifications", certificationsRouter);
   app.use("/api/contact-requests", contactRequestsRouter);
   app.use("/api/messages", messagesRouter);
+  app.use("/api/live", liveRouter);
   app.use("/api/admin", adminRouter);
 
   app.use(errorHandler);

@@ -49,6 +49,12 @@ export function Navbar() {
                 Tableau de bord
               </Link>
               <Link
+                to="/carte"
+                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
+              >
+                Carte
+              </Link>
+              <Link
                 to="/messages"
                 className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
               >
@@ -70,6 +76,12 @@ export function Navbar() {
                 className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
               >
                 Recherche
+              </Link>
+              <Link
+                to="/carte"
+                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
+              >
+                Carte
               </Link>
               <Link
                 to="/messages"
