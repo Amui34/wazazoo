@@ -17,9 +17,9 @@ async function sendVerificationEmail(email: string, token: string) {
   const url = buildVerificationUrl(token);
   await sendMail({
     to: email,
-    subject: "Vérifie ton email GigLink",
+    subject: "Vérifie ton email WAZA",
     html: `
-      <p>Bienvenue sur GigLink !</p>
+      <p>Bienvenue sur WAZA !</p>
       <p>Clique sur le lien ci-dessous pour vérifier ton email et activer ton compte :</p>
       <p><a href="${url}">${url}</a></p>
       <p>Ce lien expire dans 24 heures.</p>

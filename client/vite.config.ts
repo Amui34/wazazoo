@@ -10,10 +10,10 @@ export default defineConfig({
       devOptions: { enabled: true },
       includeAssets: ["favicon.svg", "apple-touch-icon.png", "line-art.svg"],
       manifest: {
-        name: "GigLink — Musiciens & lieux",
-        short_name: "GigLink",
+        name: "WAZA — Musiciens & lieux",
+        short_name: "WAZA",
         description:
-          "GigLink connecte les musiciens indépendants avec les lieux qui les embauchent : profils vérifiés, recherche ciblée, contact sécurisé.",
+          "WAZA connecte les musiciens indépendants avec les lieux qui les embauchent : profils vérifiés, recherche ciblée, contact sécurisé.",
         lang: "fr",
         start_url: "/",
         display: "standalone",

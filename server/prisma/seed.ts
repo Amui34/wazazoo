@@ -653,30 +653,66 @@ async function main() {
     },
   });
 
-  // --- Spots « en live » de démo (carte) ---
-  const LIVE_SPOTS = [
-    { email: "clara.jazz@demo.giglink.app", lat: 48.8606, lng: 2.3376, note: "Set jazz devant le Louvre 🎷" },
-    { email: "malik.guitare@demo.giglink.app", lat: 45.7597, lng: 4.8422, note: "Reprises acoustiques Presqu'île" },
-    { email: "sofia.violon@demo.giglink.app", lat: 43.2951, lng: 5.3746, note: "Violon sur le Vieux-Port" },
-    { email: "amelie.piano@demo.giglink.app", lat: 48.8530, lng: 2.3499, note: "Piano voix, parvis Notre-Dame" },
-    { email: "yanis.traore@demo.giglink.app", lat: 43.6045, lng: 1.4442, note: "Beatbox place du Capitole" },
-    { email: "hugo.faure@demo.giglink.app", lat: 43.2965, lng: 5.3698, note: "Reggae terrasse, cours Julien" },
+  // --- Événements de démo (carte + agenda) ---
+  const HOUR = 60 * 60 * 1000;
+  // Événements d'artistes (kind ARTIST) : startOffset/endOffset en heures depuis maintenant
+  const ARTIST_EVENTS = [
+    { email: "clara.jazz@demo.giglink.app", lat: 48.8606, lng: 2.3376, note: "Set jazz devant le Louvre 🎷", start: -1, end: 2 },
+    { email: "malik.guitare@demo.giglink.app", lat: 45.7597, lng: 4.8422, note: "Reprises acoustiques Presqu'île 🎸", start: 0.5, end: 3 },
+    { email: "sofia.violon@demo.giglink.app", lat: 43.2951, lng: 5.3746, note: "Violon sur le Vieux-Port 🎻", start: 2, end: 5 },
+    { email: "amelie.piano@demo.giglink.app", lat: 48.853, lng: 2.3499, note: "Piano voix, parvis Notre-Dame 🎹", start: 4, end: 7 },
+    { email: "yanis.traore@demo.giglink.app", lat: 43.6045, lng: 1.4442, note: "Beatbox place du Capitole 🎤", start: 24, end: 27 },
+    { email: "hugo.faure@demo.giglink.app", lat: 43.2965, lng: 5.3698, note: "Reggae terrasse, cours Julien 🌴", start: 26, end: 29 },
   ];
-  const farEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // démo : actif 30 jours
-  for (const s of LIVE_SPOTS) {
-    const u = await prisma.user.findUnique({ where: { email: s.email }, include: { profile: true } });
+  // Événements d'établissements (kind VENUE) : postés par des recruteurs
+  const VENUE_EVENTS = [
+    { email: "contact@le-petit-bistrot.demo.giglink.app", title: "Jam session ouverte", note: "Scène ouverte tous styles, entrée libre 🎶", lat: 48.8649, lng: 2.3417, start: 3, end: 7 },
+    { email: "booking@salle-eclipse.demo.giglink.app", title: "Soirée Électro Éclipse", note: "3 DJ, jusqu'au bout de la nuit 🔊", lat: 45.764, lng: 4.8357, start: 25, end: 31 },
+    { email: "contact@comptoir-du-sud.demo.giglink.app", title: "Apéro concert live", note: "Concert + tapas en terrasse ☀️", lat: 43.2965, lng: 5.37, start: 5, end: 8 },
+  ];
+
+  await prisma.event.deleteMany({}); // reset des événements de démo à chaque seed
+  let eventCount = 0;
+  for (const e of ARTIST_EVENTS) {
+    const u = await prisma.user.findUnique({ where: { email: e.email }, include: { profile: true } });
     if (!u?.profile) continue;
-    await prisma.liveSpot.upsert({
-      where: { profileId: u.profile.id },
-      update: { lat: s.lat, lng: s.lng, note: s.note, startedAt: new Date(), endsAt: farEnd },
-      create: { profileId: u.profile.id, lat: s.lat, lng: s.lng, note: s.note, endsAt: farEnd },
+    await prisma.event.create({
+      data: {
+        ownerUserId: u.id,
+        profileId: u.profile.id,
+        kind: "ARTIST",
+        title: u.profile.displayName,
+        note: e.note,
+        lat: e.lat,
+        lng: e.lng,
+        startsAt: new Date(Date.now() + e.start * HOUR),
+        endsAt: new Date(Date.now() + e.end * HOUR),
+      },
     });
+    eventCount += 1;
+  }
+  for (const e of VENUE_EVENTS) {
+    const u = await prisma.user.findUnique({ where: { email: e.email } });
+    if (!u) continue;
+    await prisma.event.create({
+      data: {
+        ownerUserId: u.id,
+        kind: "VENUE",
+        title: e.title,
+        note: e.note,
+        lat: e.lat,
+        lng: e.lng,
+        startsAt: new Date(Date.now() + e.start * HOUR),
+        endsAt: new Date(Date.now() + e.end * HOUR),
+      },
+    });
+    eventCount += 1;
   }
 
   console.log("Seed terminé.");
   console.log(`Mot de passe de tous les comptes de démo : ${DEMO_PASSWORD}`);
   console.log(`${MUSICIANS.length} musiciens, ${DJS.length} DJ, ${RECRUITERS.length} recruteurs/lieux, 1 admin.`);
-  console.log(`${LIVE_SPOTS.length} artistes en live (démo carte).`);
+  console.log(`${eventCount} événements de démo (carte/agenda).`);
 }
 
 main()

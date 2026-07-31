@@ -23,6 +23,7 @@ import {
   removeAvailability,
 } from "../features/profile/api.js";
 import { getApiErrorMessage } from "../lib/api.js";
+import { OnStageButton } from "../components/OnStageButton.js";
 
 const statusLabel: Record<string, string> = {
   PENDING: "En attente",
@@ -113,6 +114,8 @@ export default function Dashboard() {
       <div className="mx-auto max-w-3xl px-6 py-10">
         <h1 className="text-2xl font-semibold">Tableau de bord</h1>
         <p className="mt-1 text-sm text-neutral-400">Connecté en tant que {user?.email}</p>
+
+        {(hasProfile || hasDjProfile) && <OnStageButton />}
 
         <section className="mt-8 rounded-lg border border-neutral-800 p-5">
           {hasProfile && (

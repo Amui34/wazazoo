@@ -20,7 +20,7 @@ export function Navbar() {
           to="/"
           className="text-lg font-semibold text-white transition-opacity duration-200 hover:opacity-80"
         >
-          GigLink
+          WAZA
         </Link>
         <nav className="flex items-center gap-3">
           {!user && (

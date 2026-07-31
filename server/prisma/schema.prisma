@@ -90,6 +90,7 @@ model User {
   consents                Consent[]
   contactAccessLogs       ContactAccessLog[]       @relation("ContactAccessViewer")
   messagesSent            Message[]                @relation("MessageSender")
+  events                  Event[]                  @relation("UserEvents")
 
   @@map("users")
 }
@@ -163,25 +164,36 @@ model Profile {
   availabilities  Availability[]
   certifications  Certification[]
   contactRequests ContactRequest[] @relation("MusicianRequests")
-  liveSpot        LiveSpot?
+  events          Event[]          @relation("ProfileEvents")
 
   @@map("profiles")
 }
 
-// Position « en live » d'un artiste de rue : visible sur la carte tant que
-// endsAt n'est pas dépassé. Un artiste n'a qu'un spot actif à la fois.
-model LiveSpot {
-  id        String   @id @default(uuid())
-  profileId String   @unique
-  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  lat       Float
-  lng       Float
-  note      String?
-  startedAt DateTime @default(now())
-  endsAt    DateTime
+enum EventKind {
+  ARTIST // un artiste qui joue (live de rue, concert)
+  VENUE // un événement proposé par un établissement
+}
 
+// Événement géolocalisé et daté : posté par un artiste (kind ARTIST) ou par un
+// établissement (kind VENUE). Visible sur la carte/agenda tant que endsAt > maintenant.
+model Event {
+  id          String    @id @default(uuid())
+  ownerUserId String
+  owner       User      @relation("UserEvents", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  profileId   String? // pour les lives d'artistes : lien vers le profil public
+  profile     Profile?  @relation("ProfileEvents", fields: [profileId], references: [id], onDelete: SetNull)
+  kind        EventKind
+  title       String
+  note        String?
+  lat         Float
+  lng         Float
+  startsAt    DateTime
+  endsAt      DateTime
+  createdAt   DateTime  @default(now())
+
+  @@index([startsAt])
   @@index([endsAt])
-  @@map("live_spots")
+  @@map("events")
 }
 
 // 1-1 extension of Profile, only present when profileType = MUSICIAN.
