@@ -28,7 +28,11 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
-export default function Signup({ role }: { role: "MUSICIAN" | "RECRUITER" }) {
+export default function Signup({
+  role,
+}: {
+  role: "MUSICIAN" | "RECRUITER" | "TOURIST" | "ORGANIZER" | "FESTIVAL";
+}) {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
@@ -37,12 +41,27 @@ export default function Signup({ role }: { role: "MUSICIAN" | "RECRUITER" }) {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-  const title = role === "MUSICIAN" ? "Créer mon profil musicien" : "Créer un compte recruteur";
+  const title =
+    role === "MUSICIAN"
+      ? "Créer mon profil musicien"
+      : role === "RECRUITER"
+        ? "Créer un compte recruteur"
+        : role === "ORGANIZER"
+          ? "Créer un compte organisateur"
+          : role === "FESTIVAL"
+            ? "Créer un compte festival"
+            : "Créer mon compte";
   useDocumentTitle(title);
   const subtitle =
     role === "MUSICIAN"
       ? "Pour trouver des lieux qui t'embauchent."
-      : "Pour trouver des musiciens pour tes événements.";
+      : role === "RECRUITER"
+        ? "Pour trouver des musiciens pour tes événements."
+        : role === "ORGANIZER"
+          ? "Pour publier tes soirées sur la carte et booker des artistes."
+          : role === "FESTIVAL"
+            ? "Pour mettre ton festival sur la carte, dans sa propre catégorie."
+            : "Pour suivre tes artistes favoris et être notifié de leurs lives.";
 
   async function onSubmit(values: FormValues) {
     setServerError(null);

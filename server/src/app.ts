@@ -15,6 +15,8 @@ import { certificationsRouter } from "./modules/certifications/certifications.ro
 import { contactRequestsRouter } from "./modules/contact-requests/contact-requests.routes.js";
 import { messagesRouter } from "./modules/messages/messages.routes.js";
 import { eventsRouter } from "./modules/events/events.routes.js";
+import { followsRouter } from "./modules/follows/follows.routes.js";
+import { notificationsRouter } from "./modules/notifications/notifications.routes.js";
 import { adminRouter } from "./modules/admin/admin.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { apiRateLimit } from "./middleware/rateLimit.js";
@@ -64,6 +66,8 @@ export function createApp() {
   app.use("/api/contact-requests", contactRequestsRouter);
   app.use("/api/messages", messagesRouter);
   app.use("/api/events", eventsRouter);
+  app.use("/api/follows", followsRouter);
+  app.use("/api/notifications", notificationsRouter);
   app.use("/api/admin", adminRouter);
 
   app.use(errorHandler);

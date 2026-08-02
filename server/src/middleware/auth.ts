@@ -7,7 +7,7 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string;
-      userRole?: "MUSICIAN" | "RECRUITER" | "ADMIN";
+      userRole?: "MUSICIAN" | "RECRUITER" | "ADMIN" | "TOURIST" | "ORGANIZER" | "FESTIVAL";
     }
   }
 }

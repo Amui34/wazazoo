@@ -125,6 +125,10 @@ export default function Dashboard() {
                 <Badge tone={profile.status === "PUBLISHED" ? "success" : "neutral"}>
                   Musicien · {profile.status === "PUBLISHED" ? "Profil publié" : "Brouillon (non visible)"}
                 </Badge>
+                <p className="mt-1.5 text-sm text-neutral-400">
+                  👁️ <span className="font-semibold text-white">{profile.viewsCount ?? 0}</span> vue
+                  {(profile.viewsCount ?? 0) !== 1 ? "s" : ""} de ton profil
+                </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {profile.status === "PUBLISHED" && (

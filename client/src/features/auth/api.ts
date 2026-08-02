@@ -1,6 +1,12 @@
 import { api } from "../../lib/api.js";
 
-export type UserRole = "MUSICIAN" | "RECRUITER" | "ADMIN";
+export type UserRole =
+  | "MUSICIAN"
+  | "RECRUITER"
+  | "ADMIN"
+  | "TOURIST"
+  | "ORGANIZER"
+  | "FESTIVAL";
 
 export type CurrentUser = {
   id: string;
@@ -12,7 +18,7 @@ export type CurrentUser = {
 export async function signup(input: {
   email: string;
   password: string;
-  role: "MUSICIAN" | "RECRUITER";
+  role: "MUSICIAN" | "RECRUITER" | "TOURIST" | "ORGANIZER" | "FESTIVAL";
   acceptedTerms: true;
 }) {
   const { data } = await api.post<{

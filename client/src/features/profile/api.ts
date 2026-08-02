@@ -38,6 +38,7 @@ export type MusicianProfile = {
   rateMax: number | null;
   rateCurrency: string;
   status: "DRAFT" | "PUBLISHED" | "SUSPENDED";
+  viewsCount: number;
   styles: RefOption[];
   instruments: RefOption[];
   equipmentNotes: string | null;
@@ -46,6 +47,8 @@ export type MusicianProfile = {
   certificationsCount: number;
   averageRating: number | null;
   certifications: CertificationSummary[];
+  followersCount?: number;
+  isFollowing?: boolean;
 };
 
 export async function getMyProfile() {

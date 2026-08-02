@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Navbar } from "../components/Navbar.js";
 import { Footer } from "../components/Footer.js";
 import { Badge } from "../components/Badge.js";
@@ -10,12 +10,14 @@ import { AmbientLights } from "../components/AmbientLights.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { getPublicProfile } from "../features/profile/api.js";
 import { sendContactRequest } from "../features/contact-requests/api.js";
+import { followArtist, unfollowArtist } from "../features/social/api.js";
 import { useAuth } from "../features/auth/AuthContext.js";
 import { getApiErrorMessage } from "../lib/api.js";
 
 export default function MusicianPublicProfile() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,11 @@ export default function MusicianPublicProfile() {
     mutationFn: () => sendContactRequest({ profileId: id!, message }),
     onSuccess: () => setSent(true),
     onError: (err) => setError(getApiErrorMessage(err)),
+  });
+
+  const followMutation = useMutation({
+    mutationFn: () => (profile?.isFollowing ? unfollowArtist(id!) : followArtist(id!)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profile", id] }),
   });
 
   if (isLoading) {
@@ -95,6 +102,30 @@ export default function MusicianPublicProfile() {
                 <Badge>
                   {profile.rateMin ?? "?"}–{profile.rateMax ?? "?"} € / prestation
                 </Badge>
+              )}
+            </div>
+
+            <div className="mt-3 flex justify-center sm:justify-start">
+              {!user ? (
+                <Link
+                  to="/connexion"
+                  className="rounded-full border border-neutral-700 px-4 py-1.5 text-sm transition-colors hover:border-violet-400 hover:text-violet-200"
+                >
+                  ❤️ Suivre{profile.followersCount ? ` · ${profile.followersCount}` : ""}
+                </Link>
+              ) : (
+                <button
+                  onClick={() => followMutation.mutate()}
+                  disabled={followMutation.isPending}
+                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all disabled:opacity-50 ${
+                    profile.isFollowing
+                      ? "border border-violet-400 bg-violet-500/20 text-violet-200"
+                      : "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:-translate-y-0.5"
+                  }`}
+                >
+                  {profile.isFollowing ? "✓ Suivi" : "❤️ Suivre"}
+                  {profile.followersCount ? ` · ${profile.followersCount}` : ""}
+                </button>
               )}
             </div>
           </div>

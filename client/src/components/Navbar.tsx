@@ -1,119 +1,49 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth, useInvalidateAuth } from "../features/auth/AuthContext.js";
-import { logout } from "../features/auth/api.js";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "../features/auth/AuthContext.js";
+import { listNotifications } from "../features/social/api.js";
+import { UserMenu } from "./UserMenu.js";
+
+const linkCls = "text-sm text-neutral-300 transition-colors duration-200 hover:text-white";
 
 export function Navbar() {
   const { user } = useAuth();
-  const invalidateAuth = useInvalidateAuth();
-  const navigate = useNavigate();
 
-  async function handleLogout() {
-    await logout();
-    await invalidateAuth();
-    navigate("/");
-  }
+  const { data: notif } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: listNotifications,
+    enabled: !!user,
+    refetchInterval: 30000,
+  });
+  const unread = notif?.unreadCount ?? 0;
 
   return (
     <header className="border-b border-neutral-800">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link
-          to="/"
-          className="text-lg font-semibold text-white transition-opacity duration-200 hover:opacity-80"
-        >
+        <Link to="/" className="text-lg font-bold tracking-tight text-white hover:opacity-80">
           WAZA
         </Link>
-        <nav className="flex items-center gap-3">
-          {!user && (
-            <>
-              <Link
-                to="/connexion"
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Connexion
-              </Link>
-              <Link
-                to="/inscription/musicien"
-                className="rounded-md bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-neutral-200"
-              >
-                S'inscrire
-              </Link>
-            </>
+
+        <nav className="flex items-center gap-4">
+          <Link to="/" className={linkCls}>
+            Carte
+          </Link>
+          <Link to="/recherche" className={linkCls}>
+            Artistes
+          </Link>
+
+          {user && (
+            <Link to="/notifications" className="relative text-lg leading-none" title="Notifications">
+              🔔
+              {unread > 0 && (
+                <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-fuchsia-500 px-1 text-[10px] font-bold text-white">
+                  {unread}
+                </span>
+              )}
+            </Link>
           )}
 
-          {user?.role === "MUSICIAN" && (
-            <>
-              <Link
-                to="/tableau-de-bord"
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Tableau de bord
-              </Link>
-              <Link
-                to="/carte"
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Carte
-              </Link>
-              <Link
-                to="/messages"
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Messages
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Déconnexion
-              </button>
-            </>
-          )}
-
-          {user?.role === "RECRUITER" && (
-            <>
-              <Link
-                to="/recherche"
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Recherche
-              </Link>
-              <Link
-                to="/carte"
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Carte
-              </Link>
-              <Link
-                to="/messages"
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Messages
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Déconnexion
-              </button>
-            </>
-          )}
-
-          {user?.role === "ADMIN" && (
-            <>
-              <Link
-                to="/admin"
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Administration
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-neutral-300 transition-colors duration-200 hover:text-white"
-              >
-                Déconnexion
-              </button>
-            </>
-          )}
+          <UserMenu />
         </nav>
       </div>
     </header>

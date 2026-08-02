@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createEvent, deleteEvent, listMyEvents } from "../features/events/api.js";
+import { useAutoEndLiveOnMove } from "../features/events/useAutoEndLiveOnMove.js";
 import { getApiErrorMessage } from "../lib/api.js";
 
 // Bouton « Je monte sur scène » : un tap → géoloc → live immédiat de 2h,
@@ -10,6 +11,10 @@ export function OnStageButton({ variant = "card" }: { variant?: "card" | "inline
   const [msg, setMsg] = useState<string | null>(null);
 
   const { data: myEvents = [] } = useQuery({ queryKey: ["events-mine"], queryFn: listMyEvents });
+
+  useAutoEndLiveOnMove(() =>
+    setMsg("📍 Tu t'es déplacé — ton direct s'est coupé automatiquement.")
+  );
 
   const liveNow = myEvents.find((e) => {
     const n = Date.now();

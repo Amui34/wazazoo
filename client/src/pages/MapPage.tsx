@@ -8,6 +8,7 @@ import { Navbar } from "../components/Navbar.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { useAuth } from "../features/auth/AuthContext.js";
 import { listActiveEvents, createEvent, deleteEvent, listMyEvents, type WazaEvent } from "../features/events/api.js";
+import { useAutoEndLiveOnMove } from "../features/events/useAutoEndLiveOnMove.js";
 import { getApiErrorMessage } from "../lib/api.js";
 
 // ---- Helpers carte ----------------------------------------------------------
@@ -39,9 +40,27 @@ function ClickToPlace({ active, onPlace }: { active: boolean; onPlace: (ll: { la
   return null;
 }
 
-function pin(kind: "ARTIST" | "VENUE" | "NEW") {
-  const bg = kind === "NEW" ? "#22c55e" : kind === "VENUE" ? "#f59e0b" : "#8b5cf6";
-  const emoji = kind === "NEW" ? "📍" : kind === "VENUE" ? "🎪" : "🎵";
+// Catégories affichées, déduites automatiquement du type d'événement + du profil :
+//  - Festival (compte FESTIVAL) → Festival
+//  - Lieu / organisateur (VENUE, ORGANIZER) → Lieux
+//  - Artiste DJ → DJ ; artiste musicien/groupe → Live
+type Category = "DJ" | "LIVE" | "FESTIVAL" | "LIEUX";
+const CAT_META: Record<Category, { color: string; emoji: string; label: string }> = {
+  DJ: { color: "#22d3ee", emoji: "🎧", label: "DJ" },
+  LIVE: { color: "#8b5cf6", emoji: "🎵", label: "Live" },
+  FESTIVAL: { color: "#f43f5e", emoji: "🎪", label: "Festival" },
+  LIEUX: { color: "#f59e0b", emoji: "📍", label: "Lieux" },
+};
+function eventCategory(e: WazaEvent): Category {
+  if (e.kind === "FESTIVAL") return "FESTIVAL";
+  if (e.kind === "VENUE" || e.kind === "ORGANIZER") return "LIEUX";
+  if (e.kind === "ARTIST" && e.profileType === "DJ") return "DJ";
+  return "LIVE";
+}
+
+function pin(cat: Category | "NEW") {
+  const bg = cat === "NEW" ? "#22c55e" : CAT_META[cat].color;
+  const emoji = cat === "NEW" ? "📍" : CAT_META[cat].emoji;
   return L.divIcon({
     className: "",
     html: `<div style="width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${bg};border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);font-size:16px">${emoji}</span></div>`,
@@ -96,7 +115,12 @@ export default function MapPage() {
   useDocumentTitle("Sorties près de toi");
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const canCreate = user?.role === "MUSICIAN" || user?.role === "RECRUITER";
+  const canCreate =
+    user?.role === "MUSICIAN" ||
+    user?.role === "RECRUITER" ||
+    user?.role === "ORGANIZER" ||
+    user?.role === "FESTIVAL";
+  const [kindFilter, setKindFilter] = useState<"" | Category>("");
 
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
   const [search, setSearch] = useState("");
@@ -125,11 +149,21 @@ export default function MapPage() {
     enabled: canCreate,
   });
 
-  const sorted = useMemo(
-    () => [...events].sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()),
-    [events]
+  const visibleEvents = useMemo(
+    () => (kindFilter ? events.filter((e) => eventCategory(e) === kindFilter) : events),
+    [events, kindFilter]
   );
-  const points = useMemo(() => events.map((e) => [e.lat, e.lng] as [number, number]), [events]);
+  const sorted = useMemo(
+    () =>
+      [...visibleEvents].sort(
+        (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()
+      ),
+    [visibleEvents]
+  );
+  const points = useMemo(
+    () => visibleEvents.map((e) => [e.lat, e.lng] as [number, number]),
+    [visibleEvents]
+  );
 
   const createMutation = useMutation({
     mutationFn: () => {
@@ -199,6 +233,8 @@ export default function MapPage() {
     );
   }
 
+  useAutoEndLiveOnMove(() => setSearchMsg("📍 Live coupé automatiquement (tu t'es déplacé)."));
+
   // Mon live en cours (si j'en ai un actif en ce moment).
   const myLiveNow = myEvents.find((e) => {
     const n = Date.now();
@@ -252,10 +288,18 @@ export default function MapPage() {
     createMutation.mutate();
   }
 
-  const nowCount = events.filter((e) => {
+  const nowCount = visibleEvents.filter((e) => {
     const n = Date.now();
     return new Date(e.startsAt).getTime() <= n && new Date(e.endsAt).getTime() > n;
   }).length;
+
+  const KIND_FILTERS: { key: "" | Category; label: string }[] = [
+    { key: "", label: "Tout" },
+    { key: "DJ", label: "🎧 DJ" },
+    { key: "LIVE", label: "🎵 Live" },
+    { key: "FESTIVAL", label: "🎪 Festival" },
+    { key: "LIEUX", label: "📍 Lieux" },
+  ];
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
@@ -271,8 +315,28 @@ export default function MapPage() {
           </h1>
           <p className="mt-2 text-sm text-neutral-400">
             <span className="font-semibold text-red-400">● {nowCount} en ce moment</span> ·{" "}
-            {events.length} événement{events.length !== 1 ? "s" : ""} à l'affiche — artistes de rue &amp; lieux.
+            {visibleEvents.length} événement{visibleEvents.length !== 1 ? "s" : ""} à l'affiche — DJ, live, festivals &amp; lieux.
           </p>
+
+          {/* Filtre par type */}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {KIND_FILTERS.map((f) => {
+              const active = kindFilter === f.key;
+              return (
+                <button
+                  key={f.key || "all"}
+                  onClick={() => setKindFilter(f.key)}
+                  className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                    active
+                      ? "border-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 font-medium text-white"
+                      : "border-neutral-700 text-neutral-300 hover:border-neutral-400"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Barre d'outils : recherche lieu + autour de moi + créer */}
@@ -331,7 +395,7 @@ export default function MapPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className="text-xs font-semibold text-neutral-400">
-                  {user?.role === "RECRUITER" ? "Titre de l'événement *" : "Titre (sinon ton nom d'artiste)"}
+                  {user?.role === "MUSICIAN" ? "Titre (sinon ton nom d'artiste)" : "Titre de l'événement *"}
                 </label>
                 <input
                   value={title}
@@ -412,11 +476,11 @@ export default function MapPage() {
               <FlyTo target={flyTarget} />
               <ClickToPlace active={panelOpen} onPlace={(ll) => setNewLoc(ll)} />
               <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {events.map((e) => (
-                <Marker key={e.id} position={[e.lat, e.lng]} icon={pin(e.kind)}>
+              {visibleEvents.map((e) => (
+                <Marker key={e.id} position={[e.lat, e.lng]} icon={pin(eventCategory(e))}>
                   <Popup>
                     <div style={{ minWidth: 170 }}>
-                      <strong>{e.kind === "VENUE" ? "🎪 " : "🎵 "}{e.title}</strong>
+                      <strong>{CAT_META[eventCategory(e)].emoji} {e.title}</strong>
                       {e.city && <div style={{ color: "#666", fontSize: 12 }}>{e.city}</div>}
                       {e.note && <div style={{ marginTop: 4, fontSize: 13 }}>{e.note}</div>}
                       <div style={{ marginTop: 4, fontSize: 12, color: "#7c3aed" }}>
@@ -450,7 +514,7 @@ export default function MapPage() {
               ) : (
                 sorted.map((e) => {
                   const w = whenLabel(e.startsAt, e.endsAt);
-                  const accent = e.kind === "VENUE" ? "#f59e0b" : "#8b5cf6";
+                  const accent = CAT_META[eventCategory(e)].color;
                   const mine = myEvents.some((m) => m.id === e.id);
                   return (
                     <div
@@ -464,7 +528,7 @@ export default function MapPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">
-                          {e.kind === "VENUE" ? "🎪" : "🎵"} {e.title}
+                          {CAT_META[eventCategory(e)].emoji} {e.title}
                         </p>
                         {e.note && <p className="truncate text-xs text-neutral-400">{e.note}</p>}
                         <p className="mt-0.5 text-xs">

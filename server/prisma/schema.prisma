@@ -15,6 +15,9 @@ enum UserRole {
   MUSICIAN
   RECRUITER
   ADMIN
+  TOURIST // visiteur avec compte : favoris, suivi, notifications
+  ORGANIZER // organisateur de soirées / club / collectif
+  FESTIVAL // organisateur de festival
 }
 
 // Discriminator for the extensible "profile" model. V1 only ever created
@@ -91,8 +94,39 @@ model User {
   contactAccessLogs       ContactAccessLog[]       @relation("ContactAccessViewer")
   messagesSent            Message[]                @relation("MessageSender")
   events                  Event[]                  @relation("UserEvents")
+  follows                 Follow[]                 @relation("UserFollows")
+  notifications           Notification[]           @relation("UserNotifications")
 
   @@map("users")
+}
+
+// Un utilisateur (souvent touriste) suit un artiste → favoris + notifications.
+model Follow {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation("UserFollows", fields: [userId], references: [id], onDelete: Cascade)
+  profileId String
+  profile   Profile  @relation("ProfileFollowers", fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, profileId])
+  @@index([profileId])
+  @@map("follows")
+}
+
+// Notification in-app (ex. un artiste suivi passe en live).
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  message   String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("notifications")
 }
 
 model EmailVerificationToken {
@@ -155,6 +189,7 @@ model Profile {
   rateMax          Int?
   rateCurrency     String        @default("EUR")
   status           ProfileStatus @default(DRAFT)
+  viewsCount       Int           @default(0) // vues publiques (anonyme)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -165,6 +200,7 @@ model Profile {
   certifications  Certification[]
   contactRequests ContactRequest[] @relation("MusicianRequests")
   events          Event[]          @relation("ProfileEvents")
+  followers       Follow[]         @relation("ProfileFollowers")
 
   @@map("profiles")
 }
@@ -172,6 +208,8 @@ model Profile {
 enum EventKind {
   ARTIST // un artiste qui joue (live de rue, concert)
   VENUE // un événement proposé par un établissement
+  ORGANIZER // une soirée proposée par un organisateur / club
+  FESTIVAL // un festival
 }
 
 // Événement géolocalisé et daté : posté par un artiste (kind ARTIST) ou par un

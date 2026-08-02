@@ -1,9 +1,10 @@
 import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../lib/errors.js";
+import { notifyFollowers } from "../notifications/notifications.service.js";
 import type { z } from "zod";
 import type { createEventSchema } from "./events.schema.js";
 
-type Role = "MUSICIAN" | "RECRUITER" | "ADMIN";
+type Role = "MUSICIAN" | "RECRUITER" | "ADMIN" | "TOURIST" | "ORGANIZER" | "FESTIVAL";
 
 export async function createEvent(
   userId: string,
@@ -27,7 +28,7 @@ export async function createEvent(
     if (!profile) {
       throw new AppError(404, "profile_not_found", "Crée d'abord ton profil d'artiste.");
     }
-    return prisma.event.create({
+    const event = await prisma.event.create({
       data: {
         ownerUserId: userId,
         profileId: profile.id,
@@ -40,16 +41,27 @@ export async function createEvent(
         endsAt,
       },
     });
+    // Prévient les abonnés de l'artiste (favoris → notifications).
+    const isLiveNow = startsAt <= new Date();
+    await notifyFollowers(profile.id, {
+      type: "ARTIST_LIVE",
+      message: isLiveNow
+        ? `🔴 ${event.title} est en live maintenant !`
+        : `🎤 ${event.title} a programmé un événement.`,
+      link: `/musiciens/${profile.id}`,
+    }).catch(() => {});
+    return event;
   }
 
-  if (role === "RECRUITER") {
+  if (role === "RECRUITER" || role === "ORGANIZER" || role === "FESTIVAL") {
     if (!input.title || input.title.trim().length < 2) {
       throw new AppError(400, "title_required", "Donne un titre à ton événement.");
     }
+    const kind = role === "ORGANIZER" ? "ORGANIZER" : role === "FESTIVAL" ? "FESTIVAL" : "VENUE";
     return prisma.event.create({
       data: {
         ownerUserId: userId,
-        kind: "VENUE",
+        kind,
         title: input.title.trim(),
         note: input.note ?? null,
         lat: input.lat,
@@ -72,6 +84,7 @@ export async function listActive() {
           id: true,
           displayName: true,
           city: true,
+          profileType: true,
           media: { where: { isCover: true }, take: 1, select: { url: true } },
         },
       },
@@ -89,6 +102,7 @@ export async function listActive() {
     startsAt: e.startsAt,
     endsAt: e.endsAt,
     profileId: e.profileId,
+    profileType: e.profile?.profileType ?? null,
     city: e.profile?.city ?? null,
     coverPhotoUrl: e.profile?.media[0]?.url ?? null,
   }));

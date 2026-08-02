@@ -663,6 +663,8 @@ async function main() {
     { email: "amelie.piano@demo.giglink.app", lat: 48.853, lng: 2.3499, note: "Piano voix, parvis Notre-Dame 🎹", start: 4, end: 7 },
     { email: "yanis.traore@demo.giglink.app", lat: 43.6045, lng: 1.4442, note: "Beatbox place du Capitole 🎤", start: 24, end: 27 },
     { email: "hugo.faure@demo.giglink.app", lat: 43.2965, lng: 5.3698, note: "Reggae terrasse, cours Julien 🌴", start: 26, end: 29 },
+    { email: "dj.nova@demo.giglink.app", lat: 48.8566, lng: 2.3522, note: "DJ set électro au parc 🎧", start: 1, end: 4 },
+    { email: "dj.mika@demo.giglink.app", lat: 45.7597, lng: 4.8422, note: "Warm-up house en terrasse 🎛️", start: 3, end: 6 },
   ];
   // Événements d'établissements (kind VENUE) : postés par des recruteurs
   const VENUE_EVENTS = [
@@ -670,6 +672,35 @@ async function main() {
     { email: "booking@salle-eclipse.demo.giglink.app", title: "Soirée Électro Éclipse", note: "3 DJ, jusqu'au bout de la nuit 🔊", lat: 45.764, lng: 4.8357, start: 25, end: 31 },
     { email: "contact@comptoir-du-sud.demo.giglink.app", title: "Apéro concert live", note: "Concert + tapas en terrasse ☀️", lat: 43.2965, lng: 5.37, start: 5, end: 8 },
   ];
+
+  // Organisateurs de soirées (comptes ORGANIZER) + leurs soirées (kind ORGANIZER)
+  const ORGANIZERS = [
+    { email: "hello@labubble.demo.giglink.app", name: "La Bubble", title: "La Bubble — Rooftop Sunset", note: "Coucher de soleil, house & cocktails 🫧", lat: 48.8722, lng: 2.3489, start: 4, end: 9 },
+    { email: "hello@soho.demo.giglink.app", name: "SOHO", title: "SOHO Night — Techno Room", note: "Line-up techno, 2 salles, jusqu'à l'aube 🖤", lat: 48.8566, lng: 2.3701, start: 25, end: 32 },
+    { email: "hello@neonclub.demo.giglink.app", name: "Néon Club", title: "Néon — Disco Fever", note: "Boule à facettes, funk & disco ✨", lat: 45.7578, lng: 4.832, start: 27, end: 33 },
+    { email: "hello@cargosessions.demo.giglink.app", name: "Cargo Sessions", title: "Cargo Sessions — Afro House", note: "Warehouse au bord de l'eau, afro house 🌍", lat: 44.8451, lng: -0.5586, start: 6, end: 12 },
+  ];
+
+  for (const o of ORGANIZERS) {
+    await prisma.user.upsert({
+      where: { email: o.email },
+      update: {},
+      create: { email: o.email, passwordHash, role: "ORGANIZER", emailVerifiedAt: new Date() },
+    });
+  }
+
+  // Festivals (comptes FESTIVAL) + leurs événements (kind FESTIVAL)
+  const FESTIVALS = [
+    { email: "hello@sunwave.demo.giglink.app", name: "Sunwave Festival", title: "Sunwave Festival — Jour 1", note: "3 scènes, camping, line-up international 🎪🌞", lat: 43.6108, lng: 3.8767, start: 30, end: 42 },
+    { email: "hello@echofest.demo.giglink.app", name: "Echo Festival", title: "Echo Festival — Open Air", note: "Électro en plein air, food trucks 🌌", lat: 47.2184, lng: -1.5536, start: 50, end: 62 },
+  ];
+  for (const f of FESTIVALS) {
+    await prisma.user.upsert({
+      where: { email: f.email },
+      update: {},
+      create: { email: f.email, passwordHash, role: "FESTIVAL", emailVerifiedAt: new Date() },
+    });
+  }
 
   await prisma.event.deleteMany({}); // reset des événements de démo à chaque seed
   let eventCount = 0;
@@ -708,10 +739,45 @@ async function main() {
     });
     eventCount += 1;
   }
+  for (const o of ORGANIZERS) {
+    const u = await prisma.user.findUnique({ where: { email: o.email } });
+    if (!u) continue;
+    await prisma.event.create({
+      data: {
+        ownerUserId: u.id,
+        kind: "ORGANIZER",
+        title: o.title,
+        note: o.note,
+        lat: o.lat,
+        lng: o.lng,
+        startsAt: new Date(Date.now() + o.start * HOUR),
+        endsAt: new Date(Date.now() + o.end * HOUR),
+      },
+    });
+    eventCount += 1;
+  }
+
+  for (const f of FESTIVALS) {
+    const u = await prisma.user.findUnique({ where: { email: f.email } });
+    if (!u) continue;
+    await prisma.event.create({
+      data: {
+        ownerUserId: u.id,
+        kind: "FESTIVAL",
+        title: f.title,
+        note: f.note,
+        lat: f.lat,
+        lng: f.lng,
+        startsAt: new Date(Date.now() + f.start * HOUR),
+        endsAt: new Date(Date.now() + f.end * HOUR),
+      },
+    });
+    eventCount += 1;
+  }
 
   console.log("Seed terminé.");
   console.log(`Mot de passe de tous les comptes de démo : ${DEMO_PASSWORD}`);
-  console.log(`${MUSICIANS.length} musiciens, ${DJS.length} DJ, ${RECRUITERS.length} recruteurs/lieux, 1 admin.`);
+  console.log(`${MUSICIANS.length} musiciens, ${DJS.length} DJ, ${RECRUITERS.length} recruteurs/lieux, ${ORGANIZERS.length} organisateurs, ${FESTIVALS.length} festivals, 1 admin.`);
   console.log(`${eventCount} événements de démo (carte/agenda).`);
 }
 

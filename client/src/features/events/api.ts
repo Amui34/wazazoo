@@ -2,7 +2,7 @@ import { api } from "../../lib/api.js";
 
 export type WazaEvent = {
   id: string;
-  kind: "ARTIST" | "VENUE";
+  kind: "ARTIST" | "VENUE" | "ORGANIZER" | "FESTIVAL";
   title: string;
   note: string | null;
   lat: number;
@@ -10,13 +10,14 @@ export type WazaEvent = {
   startsAt: string;
   endsAt: string;
   profileId: string | null;
+  profileType: "MUSICIAN" | "DJ" | null;
   city: string | null;
   coverPhotoUrl: string | null;
 };
 
 export type MyEvent = {
   id: string;
-  kind: "ARTIST" | "VENUE";
+  kind: "ARTIST" | "VENUE" | "ORGANIZER";
   title: string;
   note: string | null;
   lat: number;

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "../components/Navbar.js";
@@ -6,6 +6,7 @@ import { StarRating } from "../components/StarRating.js";
 import { AmbientLights } from "../components/AmbientLights.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { searchMusicians } from "../features/search/api.js";
+import { listActiveEvents } from "../features/events/api.js";
 
 const THEMES = [
   { glow: "group-hover:shadow-violet-500/30", sleeve: "from-violet-600/70 to-fuchsia-600/50", label: "#a78bfa", chip: "border-violet-400/30 bg-violet-500/15 text-violet-200" },
@@ -151,7 +152,12 @@ function SkeletonCard({ delay }: { delay: number }) {
   );
 }
 
-type Filters = { kind: "" | "MUSICIAN" | "GROUP" | "DJ"; city: string; date: string; budgetMax: string };
+type Filters = {
+  kind: "" | "MUSICIAN" | "GROUP" | "DJ" | "ORGANIZER";
+  city: string;
+  date: string;
+  budgetMax: string;
+};
 const EMPTY: Filters = { kind: "", city: "", date: "", budgetMax: "" };
 
 export default function Search() {
@@ -159,16 +165,37 @@ export default function Search() {
   const [draft, setDraft] = useState<Filters>(EMPTY);
   const [applied, setApplied] = useState<Filters>(EMPTY);
 
+  const showOrganizers = applied.kind === "ORGANIZER";
+
   const { data: results = [], isFetching, isPending } = useQuery({
     queryKey: ["search", "musicians", applied],
     queryFn: () =>
       searchMusicians({
-        kind: applied.kind || undefined,
+        kind: applied.kind === "ORGANIZER" ? undefined : applied.kind || undefined,
         city: applied.city || undefined,
         date: applied.date || undefined,
         budgetMax: applied.budgetMax ? Number(applied.budgetMax) : undefined,
       }),
+    enabled: !showOrganizers,
   });
+
+  // Les organisateurs n'ont pas de profil : on les liste depuis leurs
+  // événements actifs (kind ORGANIZER), regroupés par nom.
+  const { data: activeEvents = [], isPending: orgPending } = useQuery({
+    queryKey: ["events-active"],
+    queryFn: listActiveEvents,
+    enabled: showOrganizers,
+  });
+  const organizers = useMemo(() => {
+    const byName = new Map<string, { title: string; note: string | null; lat: number; lng: number; count: number }>();
+    for (const e of activeEvents) {
+      if (e.kind !== "ORGANIZER") continue;
+      const existing = byName.get(e.title);
+      if (existing) existing.count += 1;
+      else byName.set(e.title, { title: e.title, note: e.note, lat: e.lat, lng: e.lng, count: 1 });
+    }
+    return [...byName.values()];
+  }, [activeEvents]);
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -185,19 +212,11 @@ export default function Search() {
       <div className="relative">
         <Navbar />
 
-        <div className="mx-auto max-w-6xl px-6 py-10">
-          <h1 className="max-w-3xl animate-fade-in-up bg-gradient-to-r from-white via-violet-200 to-fuchsia-300 bg-clip-text text-3xl font-bold leading-tight text-transparent sm:text-4xl">
-            Trouvez l'artiste idéal pour votre établissement
-          </h1>
-          <p className="mt-3 max-w-2xl animate-fade-in-up text-base text-neutral-400" style={{ animationDelay: "20ms" }}>
-            Musiciens, DJ et groupes vérifiés pour animer vos soirées, restaurants et événements.
-          </p>
-
-          {/* Barre de recherche unifiée */}
+        <div className="mx-auto max-w-6xl px-6 py-8">
+          {/* Barre de recherche unifiée (le bandeau) */}
           <form
             onSubmit={submit}
-            className="mt-7 animate-fade-in-up rounded-2xl border border-neutral-800 bg-neutral-900/60 p-2 shadow-xl shadow-black/30 backdrop-blur sm:flex sm:items-stretch sm:gap-0"
-            style={{ animationDelay: "60ms" }}
+            className="animate-fade-in-up rounded-2xl border border-neutral-800 bg-neutral-900/60 p-2 shadow-xl shadow-black/30 backdrop-blur sm:flex sm:items-stretch sm:gap-0"
           >
             <div className="flex-1 rounded-xl px-4 py-2 transition-colors hover:bg-neutral-800/50 sm:border-r sm:border-neutral-800">
               <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
@@ -212,6 +231,7 @@ export default function Search() {
                 <option value="MUSICIAN" className="bg-neutral-900">Musiciens (solo)</option>
                 <option value="GROUP" className="bg-neutral-900">Groupes</option>
                 <option value="DJ" className="bg-neutral-900">DJ</option>
+                <option value="ORGANIZER" className="bg-neutral-900">Organisateurs</option>
               </select>
             </div>
 
@@ -274,30 +294,72 @@ export default function Search() {
             </button>
           )}
 
-          {!isPending && (
-            <p
-              className="mt-6 animate-fade-in-up text-sm text-neutral-400 transition-opacity duration-300"
-              style={{ opacity: isFetching ? 0.5 : 1 }}
-            >
-              <span className="font-medium text-violet-300">{results.length}</span> artiste
-              {results.length !== 1 ? "s" : ""} trouvé{results.length !== 1 ? "s" : ""}
-            </p>
-          )}
+          {showOrganizers ? (
+            <>
+              {!orgPending && (
+                <p className="mt-6 animate-fade-in-up text-sm text-neutral-400">
+                  <span className="font-medium text-fuchsia-300">{organizers.length}</span> organisateur
+                  {organizers.length !== 1 ? "s" : ""} actif{organizers.length !== 1 ? "s" : ""}
+                </p>
+              )}
+              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {orgPending && Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} delay={i * 60} />)}
+                {!orgPending &&
+                  organizers.map((o, i) => (
+                    <div
+                      key={o.title}
+                      style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
+                      className="animate-fade-in-up rounded-2xl border border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/5 p-5"
+                    >
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-2xl">
+                        🎉
+                      </div>
+                      <p className="mt-3 text-lg font-bold">{o.title}</p>
+                      {o.note && <p className="mt-1 text-sm text-neutral-400">{o.note}</p>}
+                      <p className="mt-2 text-xs text-fuchsia-300">
+                        {o.count} événement{o.count !== 1 ? "s" : ""} à l'affiche
+                      </p>
+                      <Link to="/carte" className="mt-3 inline-block text-sm font-medium text-white hover:underline">
+                        Voir sur la carte →
+                      </Link>
+                    </div>
+                  ))}
+              </div>
+              {!orgPending && organizers.length === 0 && (
+                <div className="mt-16 animate-fade-in-up text-center">
+                  <p className="text-3xl">🎉</p>
+                  <p className="mt-3 text-sm text-neutral-500">Aucun organisateur n'a d'événement en cours.</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {!isPending && (
+                <p
+                  className="mt-6 animate-fade-in-up text-sm text-neutral-400 transition-opacity duration-300"
+                  style={{ opacity: isFetching ? 0.5 : 1 }}
+                >
+                  <span className="font-medium text-violet-300">{results.length}</span> artiste
+                  {results.length !== 1 ? "s" : ""} trouvé{results.length !== 1 ? "s" : ""}
+                </p>
+              )}
 
-          <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
-            {isPending && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} delay={i * 60} />)}
+              <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+                {isPending && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} delay={i * 60} />)}
 
-            {!isPending &&
-              results.map((musician, i) => (
-                <VinylCard key={musician.id} musician={musician} index={i} fetching={isFetching} />
-              ))}
-          </div>
+                {!isPending &&
+                  results.map((musician, i) => (
+                    <VinylCard key={musician.id} musician={musician} index={i} fetching={isFetching} />
+                  ))}
+              </div>
 
-          {!isPending && !isFetching && results.length === 0 && (
-            <div className="mt-16 animate-fade-in-up text-center">
-              <p className="text-3xl">🎧</p>
-              <p className="mt-3 text-sm text-neutral-500">Aucun artiste ne correspond à ces critères.</p>
-            </div>
+              {!isPending && !isFetching && results.length === 0 && (
+                <div className="mt-16 animate-fade-in-up text-center">
+                  <p className="text-3xl">🎧</p>
+                  <p className="mt-3 text-sm text-neutral-500">Aucun artiste ne correspond à ces critères.</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

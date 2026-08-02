@@ -42,6 +42,7 @@ function shapePublicProfile(profile: NonNullable<Awaited<ReturnType<typeof findP
     rateMax: profile.rateMax,
     rateCurrency: profile.rateCurrency,
     status: profile.status,
+    viewsCount: profile.viewsCount,
     styles:
       profile.profileType === "DJ"
         ? profile.djProfile?.styles.map((s) => s.style) ?? []
@@ -189,7 +190,19 @@ export async function getPublicProfile(profileId: string, viewerUserId: string |
   if (profile.status !== "PUBLISHED" && profile.userId !== viewerUserId) {
     throw new AppError(404, "profile_not_found", "Profil introuvable.");
   }
-  return shapePublicProfile(profile);
+  // Compteur de vues anonyme : on compte les visiteurs autres que le propriétaire.
+  if (profile.status === "PUBLISHED" && profile.userId !== viewerUserId) {
+    prisma.profile
+      .update({ where: { id: profile.id }, data: { viewsCount: { increment: 1 } } })
+      .catch(() => {});
+  }
+
+  const followersCount = await prisma.follow.count({ where: { profileId } });
+  const isFollowing = viewerUserId
+    ? (await prisma.follow.count({ where: { userId: viewerUserId, profileId } })) > 0
+    : false;
+
+  return { ...shapePublicProfile(profile), followersCount, isFollowing };
 }
 
 export async function addMedia(userId: string, input: z.infer<typeof addMediaSchema>) {
