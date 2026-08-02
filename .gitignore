@@ -18,3 +18,4 @@ server/uploads/*
 !server/uploads/.gitkeep
 # Config outillage local
 .claude/
+db-backup-*.sql
