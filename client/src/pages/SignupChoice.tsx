@@ -47,9 +47,9 @@ export default function SignupChoice() {
       <AmbientLights />
       <div className="relative w-full max-w-2xl">
         <Link to="/" className="mb-8 block text-center text-xl font-bold tracking-tight">
-          WAZA
+          WAZAZOO
         </Link>
-        <h1 className="text-center text-2xl font-bold sm:text-3xl">Rejoindre WAZA</h1>
+        <h1 className="text-center text-2xl font-bold sm:text-3xl">Rejoindre WAZAZOO</h1>
         <p className="mt-2 text-center text-sm text-neutral-400">Qui es-tu ? Choisis pour commencer.</p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">

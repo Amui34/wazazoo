@@ -10,10 +10,10 @@ export default defineConfig({
       devOptions: { enabled: true },
       includeAssets: ["favicon.svg", "apple-touch-icon.png", "line-art.svg"],
       manifest: {
-        name: "WAZA — Musiciens & lieux",
-        short_name: "WAZA",
+        name: "WAZAZOO — Musiciens & lieux",
+        short_name: "WAZAZOO",
         description:
-          "WAZA connecte les musiciens indépendants avec les lieux qui les embauchent : profils vérifiés, recherche ciblée, contact sécurisé.",
+          "WAZAZOO connecte les musiciens indépendants avec les lieux qui les embauchent : profils vérifiés, recherche ciblée, contact sécurisé.",
         lang: "fr",
         start_url: "/",
         display: "standalone",

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 export function useDocumentTitle(title: string) {
   useEffect(() => {
     const previous = document.title;
-    document.title = `${title} · WAZA`;
+    document.title = `${title} · WAZAZOO`;
     return () => {
       document.title = previous;
     };

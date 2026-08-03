@@ -338,7 +338,7 @@ export default function ProfileEditor() {
             <label className="flex items-start gap-2 text-sm text-neutral-400">
               <input type="checkbox" id="consent" className="mt-1" />
               <span>
-                J'accepte que mon profil soit visible publiquement sur WAZA (nom, bio, styles, médias,
+                J'accepte que mon profil soit visible publiquement sur WAZAZOO (nom, bio, styles, médias,
                 certifications).
               </span>
             </label>

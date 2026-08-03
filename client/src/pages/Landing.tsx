@@ -52,7 +52,7 @@ export default function Landing() {
             className="mx-auto mt-6 max-w-2xl animate-fade-in-up text-lg text-neutral-400"
             style={{ animationDelay: "120ms" }}
           >
-            WAZA connecte les musiciens indépendants avec les restaurants,
+            WAZAZOO connecte les musiciens indépendants avec les restaurants,
             bars, salles de concert et organisateurs d'événements qui les
             embauchent. Profils vérifiés, recherche ciblée, contact sécurisé.
           </p>
@@ -98,7 +98,7 @@ export default function Landing() {
 
         <section className="mx-auto max-w-6xl px-6 py-20">
           <Reveal>
-            <h2 className="text-center text-2xl font-semibold">Pourquoi WAZA</h2>
+            <h2 className="text-center text-2xl font-semibold">Pourquoi WAZAZOO</h2>
           </Reveal>
           <div className="mt-12 grid gap-8 sm:grid-cols-3">
             {features.map((feature, i) => (

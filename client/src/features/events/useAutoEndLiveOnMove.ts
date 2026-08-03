@@ -19,7 +19,7 @@ function distanceMeters(aLat: number, aLng: number, bLat: number, bLng: number) 
 
 // Tant qu'un direct est en cours, surveille la position : si l'artiste s'éloigne
 // de plus de ~250 m de son point, le direct est coupé automatiquement.
-// (Fonctionne tant que WAZA est ouvert ; le vrai suivi en arrière-plan viendra
+// (Fonctionne tant que WAZAZOO est ouvert ; le vrai suivi en arrière-plan viendra
 //  avec l'app mobile native.)
 export function useAutoEndLiveOnMove(onCut?: () => void) {
   const qc = useQueryClient();

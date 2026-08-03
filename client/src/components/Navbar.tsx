@@ -21,7 +21,7 @@ export function Navbar() {
     <header className="border-b border-neutral-800">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link to="/" className="text-lg font-bold tracking-tight text-white hover:opacity-80">
-          WAZA
+          WAZAZOO
         </Link>
 
         <nav className="flex items-center gap-4">
