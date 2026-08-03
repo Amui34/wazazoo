@@ -6,6 +6,7 @@ import { StarRating } from "../components/StarRating.js";
 import { AmbientLights } from "../components/AmbientLights.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { searchMusicians } from "../features/search/api.js";
+import { getStyles } from "../features/profile/api.js";
 import { listActiveEvents } from "../features/events/api.js";
 
 const THEMES = [
@@ -154,11 +155,12 @@ function SkeletonCard({ delay }: { delay: number }) {
 
 type Filters = {
   kind: "" | "MUSICIAN" | "GROUP" | "DJ" | "ORGANIZER";
+  styleId: string;
   city: string;
   date: string;
   budgetMax: string;
 };
-const EMPTY: Filters = { kind: "", city: "", date: "", budgetMax: "" };
+const EMPTY: Filters = { kind: "", styleId: "", city: "", date: "", budgetMax: "" };
 
 export default function Search() {
   useDocumentTitle("Trouver un artiste");
@@ -172,12 +174,15 @@ export default function Search() {
     queryFn: () =>
       searchMusicians({
         kind: applied.kind === "ORGANIZER" ? undefined : applied.kind || undefined,
+        styleId: applied.styleId || undefined,
         city: applied.city || undefined,
         date: applied.date || undefined,
         budgetMax: applied.budgetMax ? Number(applied.budgetMax) : undefined,
       }),
     enabled: !showOrganizers,
   });
+
+  const { data: styles = [] } = useQuery({ queryKey: ["styles"], queryFn: getStyles });
 
   // Les organisateurs n'ont pas de profil : on les liste depuis leurs
   // événements actifs (kind ORGANIZER), regroupés par nom.
@@ -237,6 +242,25 @@ export default function Search() {
 
             <div className="flex-1 rounded-xl px-4 py-2 transition-colors hover:bg-neutral-800/50 sm:border-r sm:border-neutral-800">
               <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+                Style
+              </label>
+              <select
+                value={draft.styleId}
+                onChange={(e) => setDraft({ ...draft, styleId: e.target.value })}
+                disabled={draft.kind === "ORGANIZER"}
+                className={`${fieldCls} mt-0.5 cursor-pointer disabled:opacity-40`}
+              >
+                <option value="" className="bg-neutral-900">Tous</option>
+                {styles.map((s) => (
+                  <option key={s.id} value={s.id} className="bg-neutral-900">
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1 rounded-xl px-4 py-2 transition-colors hover:bg-neutral-800/50 sm:border-r sm:border-neutral-800">
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
                 Ville / région
               </label>
               <input
@@ -282,7 +306,7 @@ export default function Search() {
             </div>
           </form>
 
-          {(applied.kind || applied.city || applied.date || applied.budgetMax) && (
+          {(applied.kind || applied.styleId || applied.city || applied.date || applied.budgetMax) && (
             <button
               onClick={() => {
                 setDraft(EMPTY);
