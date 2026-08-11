@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { AmbientLights } from "../components/AmbientLights.js";
+import { MusicLineArt } from "../components/MusicLineArt.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 
 const roles = [
@@ -45,6 +46,7 @@ export default function SignupChoice() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-neutral-950 px-6 text-white">
       <AmbientLights />
+      <MusicLineArt />
       <div className="relative w-full max-w-2xl">
         <Link to="/" className="mb-8 block text-center text-xl font-bold tracking-tight">
           WAZAZOO

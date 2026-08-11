@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { TextField } from "../components/TextField.js";
 import { AmbientLights } from "../components/AmbientLights.js";
+import { MusicLineArt } from "../components/MusicLineArt.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { login, resendVerification } from "../features/auth/api.js";
 import { useInvalidateAuth } from "../features/auth/AuthContext.js";
@@ -64,6 +65,7 @@ export default function Login() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-neutral-950 px-6 py-12 text-white">
       <AmbientLights />
+      <MusicLineArt />
       <div className="relative w-full max-w-sm">
         <h1 className="text-2xl font-semibold">Connexion</h1>
 
