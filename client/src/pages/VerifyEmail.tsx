@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { verifyEmail } from "../features/auth/api.js";
 import { getApiErrorMessage } from "../lib/api.js";
 import { AmbientLights } from "../components/AmbientLights.js";
+import { MusicLineArt } from "../components/MusicLineArt.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 
 type Status = "loading" | "success" | "error";
@@ -31,6 +32,7 @@ export default function VerifyEmail() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-neutral-950 px-6 text-center text-white">
       <AmbientLights />
+      <MusicLineArt />
       <div className="relative flex flex-col items-center">
         {status === "loading" && <p className="text-neutral-400">Vérification en cours...</p>}
 

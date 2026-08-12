@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { AmbientLights } from "../components/AmbientLights.js";
+import { MusicLineArt } from "../components/MusicLineArt.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 
 export default function NotFound() {
@@ -8,6 +9,7 @@ export default function NotFound() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-neutral-950 px-6 text-center text-white">
       <AmbientLights />
+      <MusicLineArt />
       <div className="relative">
         <p className="text-6xl font-semibold text-neutral-700">404</p>
         <h1 className="mt-4 text-2xl font-semibold">Page introuvable</h1>

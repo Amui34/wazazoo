@@ -3,6 +3,7 @@ import { useParams, Link, useLocation } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Navbar } from "../components/Navbar.js";
 import { AmbientLights } from "../components/AmbientLights.js";
+import { MusicLineArt } from "../components/MusicLineArt.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { useAuth } from "../features/auth/AuthContext.js";
 import { getCertificationByToken, confirmCertification, submitReview } from "../features/certifications/api.js";
@@ -77,6 +78,7 @@ export default function CertificationConfirm() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-neutral-950 text-white">
       <AmbientLights />
+      <MusicLineArt />
       <div className="relative">
       <Navbar />
       <div className="mx-auto max-w-md px-6 py-16 text-center">
