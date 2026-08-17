@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma.js";
 
 export type SearchFilters = {
   styleId?: string;
+  instrumentId?: string;
   city?: string;
   budgetMax?: number;
   minCertifications?: number;
@@ -33,6 +34,11 @@ export async function searchMusicians(filters: SearchFilters) {
         { musicianProfile: { styles: { some: { styleId: filters.styleId } } } },
         { djProfile: { styles: { some: { styleId: filters.styleId } } } },
       ],
+    });
+  }
+  if (filters.instrumentId) {
+    and.push({
+      musicianProfile: { instruments: { some: { instrumentId: filters.instrumentId } } },
     });
   }
   if (filters.date) {

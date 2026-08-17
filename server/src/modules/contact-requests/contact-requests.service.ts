@@ -11,6 +11,9 @@ export async function createContactRequest(
   if (!profile || profile.status !== "PUBLISHED") {
     throw new AppError(404, "profile_not_found", "Profil introuvable.");
   }
+  if (profile.userId === recruiterUserId) {
+    throw new AppError(400, "self_contact", "Tu ne peux pas te contacter toi-même.");
+  }
 
   return prisma.contactRequest.create({
     data: {

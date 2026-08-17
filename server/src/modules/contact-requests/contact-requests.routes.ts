@@ -15,8 +15,11 @@ contactRequestsRouter.post(
   writeRateLimit,
   validateBody(createContactRequestSchema),
   asyncHandler(async (req, res) => {
-    if (req.userRole !== "RECRUITER") {
-      throw new AppError(403, "forbidden", "Réservé aux recruteurs.");
+    // Recruteurs, organisateurs, festivals ET musiciens (pour monter un groupe)
+    // peuvent envoyer une demande de contact. Les touristes ne peuvent pas.
+    const allowed = ["RECRUITER", "ORGANIZER", "FESTIVAL", "MUSICIAN"];
+    if (!req.userRole || !allowed.includes(req.userRole)) {
+      throw new AppError(403, "forbidden", "Tu ne peux pas envoyer de demande de contact avec ce compte.");
     }
     const contactRequest = await contactRequestsService.createContactRequest(req.userId!, req.body);
     res.status(201).json({ contactRequest });

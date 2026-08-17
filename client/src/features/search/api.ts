@@ -20,6 +20,7 @@ export type SearchResult = {
 export async function searchMusicians(filters: {
   kind?: "MUSICIAN" | "GROUP" | "DJ";
   styleId?: string;
+  instrumentId?: string;
   city?: string;
   date?: string;
   budgetMax?: number;

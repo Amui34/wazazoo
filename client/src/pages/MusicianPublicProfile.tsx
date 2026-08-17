@@ -232,25 +232,33 @@ export default function MusicianPublicProfile() {
           {!user && (
             <p className="text-sm text-neutral-400">
               <Link to="/connexion" className="text-white underline">
-                Connecte-toi en tant que recruteur
+                Connecte-toi
               </Link>{" "}
               pour contacter cet artiste.
             </p>
           )}
 
-          {user?.role === "RECRUITER" &&
+          {user && ["RECRUITER", "ORGANIZER", "FESTIVAL", "MUSICIAN"].includes(user.role) &&
             (sent ? (
               <p className="animate-fade-in-up text-sm text-emerald-400">
                 ✓ Ta demande a été envoyée. {profile.displayName} peut désormais accepter ou refuser.
               </p>
             ) : (
               <div>
-                <p className="text-sm text-neutral-300">Envoyer une demande de contact</p>
+                <p className="text-sm text-neutral-300">
+                  {user.role === "MUSICIAN"
+                    ? "🎸 Proposer de jouer ensemble / monter un groupe"
+                    : "Envoyer une demande de contact"}
+                </p>
                 <textarea
                   rows={3}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Décris ton événement, la date, le lieu..."
+                  placeholder={
+                    user.role === "MUSICIAN"
+                      ? "Présente-toi, ton projet, ton style, ce que tu cherches…"
+                      : "Décris ton événement, la date, le lieu..."
+                  }
                   className="mt-2 w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition-colors duration-200 focus:border-neutral-400"
                 />
                 {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
@@ -264,8 +272,10 @@ export default function MusicianPublicProfile() {
               </div>
             ))}
 
-          {user?.role === "MUSICIAN" && (
-            <p className="text-sm text-neutral-500">Les musiciens ne peuvent pas contacter d'autres profils.</p>
+          {user?.role === "TOURIST" && (
+            <p className="text-sm text-neutral-500">
+              Passe en compte artiste, organisateur ou recruteur pour contacter les profils.
+            </p>
           )}
         </Reveal>
       </div>

@@ -7,10 +7,11 @@ export const searchRouter = Router();
 searchRouter.get(
   "/musicians",
   asyncHandler(async (req, res) => {
-    const { styleId, city, budgetMax, minCertifications, kind, date } = req.query;
+    const { styleId, instrumentId, city, budgetMax, minCertifications, kind, date } = req.query;
 
     const results = await searchMusicians({
       styleId: typeof styleId === "string" && styleId ? styleId : undefined,
+      instrumentId: typeof instrumentId === "string" && instrumentId ? instrumentId : undefined,
       city: typeof city === "string" && city ? city : undefined,
       budgetMax: budgetMax ? Number(budgetMax) : undefined,
       minCertifications: minCertifications ? Number(minCertifications) : undefined,
