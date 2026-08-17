@@ -232,7 +232,11 @@ export default function Search() {
               </label>
               <select
                 value={draft.kind}
-                onChange={(e) => setDraft({ ...draft, kind: e.target.value as Filters["kind"] })}
+                onChange={(e) => {
+                  const kind = e.target.value as Filters["kind"];
+                  // L'instrument ne concerne que les musiciens solo.
+                  setDraft({ ...draft, kind, instrumentId: kind === "MUSICIAN" ? draft.instrumentId : "" });
+                }}
                 className={`${fieldCls} mt-0.5 cursor-pointer`}
               >
                 <option value="" className="bg-neutral-900">Tous</option>
@@ -262,24 +266,26 @@ export default function Search() {
               </select>
             </div>
 
-            <div className="flex-1 rounded-xl px-4 py-2 transition-colors hover:bg-neutral-800/50 sm:border-r sm:border-neutral-800">
-              <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
-                Instrument
-              </label>
-              <select
-                value={draft.instrumentId}
-                onChange={(e) => setDraft({ ...draft, instrumentId: e.target.value })}
-                disabled={draft.kind === "ORGANIZER" || draft.kind === "DJ"}
-                className={`${fieldCls} mt-0.5 cursor-pointer disabled:opacity-40`}
-              >
-                <option value="" className="bg-neutral-900">Tous</option>
-                {instruments.map((i) => (
-                  <option key={i.id} value={i.id} className="bg-neutral-900">
-                    {i.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* L'instrument n'apparaît que pour les musiciens solo (aider à monter un groupe). */}
+            {draft.kind === "MUSICIAN" && (
+              <div className="flex-1 rounded-xl px-4 py-2 transition-colors hover:bg-neutral-800/50 sm:border-r sm:border-neutral-800">
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+                  Instrument
+                </label>
+                <select
+                  value={draft.instrumentId}
+                  onChange={(e) => setDraft({ ...draft, instrumentId: e.target.value })}
+                  className={`${fieldCls} mt-0.5 cursor-pointer`}
+                >
+                  <option value="" className="bg-neutral-900">Tous</option>
+                  {instruments.map((i) => (
+                    <option key={i.id} value={i.id} className="bg-neutral-900">
+                      {i.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="flex-1 rounded-xl px-4 py-2 transition-colors hover:bg-neutral-800/50 sm:border-r sm:border-neutral-800">
               <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
