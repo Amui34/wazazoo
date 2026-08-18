@@ -3,7 +3,7 @@ import type { RefOption } from "../profile/api.js";
 
 export type SearchResult = {
   id: string;
-  profileType: "MUSICIAN" | "DJ";
+  profileType: "MUSICIAN" | "DJ" | "ORGANIZER";
   isGroup: boolean;
   displayName: string;
   city: string | null;
@@ -18,7 +18,7 @@ export type SearchResult = {
 };
 
 export async function searchMusicians(filters: {
-  kind?: "MUSICIAN" | "GROUP" | "DJ";
+  kind?: "MUSICIAN" | "GROUP" | "DJ" | "ORGANIZER";
   styleId?: string;
   instrumentId?: string;
   city?: string;

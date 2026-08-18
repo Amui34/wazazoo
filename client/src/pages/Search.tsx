@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "../components/Navbar.js";
@@ -7,7 +7,6 @@ import { AmbientLights } from "../components/AmbientLights.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { searchMusicians } from "../features/search/api.js";
 import { getStyles, getInstruments } from "../features/profile/api.js";
-import { listActiveEvents } from "../features/events/api.js";
 
 const THEMES = [
   { glow: "group-hover:shadow-violet-500/30", sleeve: "from-violet-600/70 to-fuchsia-600/50", label: "#a78bfa", chip: "border-violet-400/30 bg-violet-500/15 text-violet-200" },
@@ -170,40 +169,23 @@ export default function Search() {
 
   const showOrganizers = applied.kind === "ORGANIZER";
 
+  // Une seule recherche : les organisateurs sont maintenant de vrais profils
+  // (fiches contactables), renvoyés quand kind = ORGANIZER.
   const { data: results = [], isFetching, isPending } = useQuery({
     queryKey: ["search", "musicians", applied],
     queryFn: () =>
       searchMusicians({
-        kind: applied.kind === "ORGANIZER" ? undefined : applied.kind || undefined,
+        kind: applied.kind || undefined,
         styleId: applied.styleId || undefined,
         instrumentId: applied.instrumentId || undefined,
         city: applied.city || undefined,
         date: applied.date || undefined,
         budgetMax: applied.budgetMax ? Number(applied.budgetMax) : undefined,
       }),
-    enabled: !showOrganizers,
   });
 
   const { data: styles = [] } = useQuery({ queryKey: ["styles"], queryFn: getStyles });
   const { data: instruments = [] } = useQuery({ queryKey: ["instruments"], queryFn: getInstruments });
-
-  // Les organisateurs n'ont pas de profil : on les liste depuis leurs
-  // événements actifs (kind ORGANIZER), regroupés par nom.
-  const { data: activeEvents = [], isPending: orgPending } = useQuery({
-    queryKey: ["events-active"],
-    queryFn: listActiveEvents,
-    enabled: showOrganizers,
-  });
-  const organizers = useMemo(() => {
-    const byName = new Map<string, { title: string; note: string | null; lat: number; lng: number; count: number }>();
-    for (const e of activeEvents) {
-      if (e.kind !== "ORGANIZER") continue;
-      const existing = byName.get(e.title);
-      if (existing) existing.count += 1;
-      else byName.set(e.title, { title: e.title, note: e.note, lat: e.lat, lng: e.lng, count: 1 });
-    }
-    return [...byName.values()];
-  }, [activeEvents]);
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -348,39 +330,42 @@ export default function Search() {
 
           {showOrganizers ? (
             <>
-              {!orgPending && (
+              {!isPending && (
                 <p className="mt-6 animate-fade-in-up text-sm text-neutral-400">
-                  <span className="font-medium text-fuchsia-300">{organizers.length}</span> organisateur
-                  {organizers.length !== 1 ? "s" : ""} actif{organizers.length !== 1 ? "s" : ""}
+                  <span className="font-medium text-fuchsia-300">{results.length}</span> organisateur
+                  {results.length !== 1 ? "s" : ""}
                 </p>
               )}
               <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {orgPending && Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} delay={i * 60} />)}
-                {!orgPending &&
-                  organizers.map((o, i) => (
-                    <div
-                      key={o.title}
+                {isPending && Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} delay={i * 60} />)}
+                {!isPending &&
+                  results.map((o, i) => (
+                    <Link
+                      key={o.id}
+                      to={`/musiciens/${o.id}`}
                       style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
-                      className="animate-fade-in-up rounded-2xl border border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/5 p-5"
+                      className="group animate-fade-in-up rounded-2xl border border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/5 p-5 transition-all hover:-translate-y-1 hover:border-fuchsia-400/50"
                     >
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-2xl">
-                        🎉
+                      <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-2xl">
+                        {o.coverPhotoUrl ? (
+                          <img src={o.coverPhotoUrl} alt={o.displayName} className="h-full w-full object-cover" />
+                        ) : (
+                          "🎉"
+                        )}
                       </div>
-                      <p className="mt-3 text-lg font-bold">{o.title}</p>
-                      {o.note && <p className="mt-1 text-sm text-neutral-400">{o.note}</p>}
-                      <p className="mt-2 text-xs text-fuchsia-300">
-                        {o.count} événement{o.count !== 1 ? "s" : ""} à l'affiche
-                      </p>
-                      <Link to="/carte" className="mt-3 inline-block text-sm font-medium text-white hover:underline">
-                        Voir sur la carte →
-                      </Link>
-                    </div>
+                      <p className="mt-3 text-lg font-bold">{o.displayName}</p>
+                      {o.city && <p className="text-xs text-neutral-400">{o.city}</p>}
+                      {o.bio && <p className="mt-2 line-clamp-2 text-sm text-neutral-400">{o.bio}</p>}
+                      <span className="mt-3 inline-block text-sm font-medium text-white group-hover:underline">
+                        Voir la fiche & contacter →
+                      </span>
+                    </Link>
                   ))}
               </div>
-              {!orgPending && organizers.length === 0 && (
+              {!isPending && results.length === 0 && (
                 <div className="mt-16 animate-fade-in-up text-center">
                   <p className="text-3xl">🎉</p>
-                  <p className="mt-3 text-sm text-neutral-500">Aucun organisateur n'a d'événement en cours.</p>
+                  <p className="mt-3 text-sm text-neutral-500">Aucun organisateur pour le moment.</p>
                 </div>
               )}
             </>

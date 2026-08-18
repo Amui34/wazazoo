@@ -28,6 +28,7 @@ enum UserRole {
 enum ProfileType {
   MUSICIAN
   DJ
+  ORGANIZER
 }
 
 enum ProfileStatus {

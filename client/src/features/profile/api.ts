@@ -29,7 +29,7 @@ export type Availability = {
 
 export type MusicianProfile = {
   id: string;
-  profileType: "MUSICIAN" | "DJ";
+  profileType: "MUSICIAN" | "DJ" | "ORGANIZER";
   displayName: string;
   bio: string | null;
   city: string | null;

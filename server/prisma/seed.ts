@@ -675,17 +675,30 @@ async function main() {
 
   // Organisateurs de soirées (comptes ORGANIZER) + leurs soirées (kind ORGANIZER)
   const ORGANIZERS = [
-    { email: "hello@labubble.demo.giglink.app", name: "La Bubble", title: "La Bubble — Rooftop Sunset", note: "Coucher de soleil, house & cocktails 🫧", lat: 48.8722, lng: 2.3489, start: 4, end: 9 },
-    { email: "hello@soho.demo.giglink.app", name: "SOHO", title: "SOHO Night — Techno Room", note: "Line-up techno, 2 salles, jusqu'à l'aube 🖤", lat: 48.8566, lng: 2.3701, start: 25, end: 32 },
-    { email: "hello@neonclub.demo.giglink.app", name: "Néon Club", title: "Néon — Disco Fever", note: "Boule à facettes, funk & disco ✨", lat: 45.7578, lng: 4.832, start: 27, end: 33 },
-    { email: "hello@cargosessions.demo.giglink.app", name: "Cargo Sessions", title: "Cargo Sessions — Afro House", note: "Warehouse au bord de l'eau, afro house 🌍", lat: 44.8451, lng: -0.5586, start: 6, end: 12 },
+    { email: "hello@labubble.demo.giglink.app", name: "La Bubble", city: "Paris", desc: "Collectif de soirées rooftop : house, cocktails et coucher de soleil sur les toits de Paris. On booke DJ et lives pour des événements chics et festifs.", title: "La Bubble — Rooftop Sunset", note: "Coucher de soleil, house & cocktails 🫧", lat: 48.8722, lng: 2.3489, start: 4, end: 9 },
+    { email: "hello@soho.demo.giglink.app", name: "SOHO", city: "Paris", desc: "Organisateur de nuits techno pointues, 2 salles, line-ups internationaux. On cherche des artistes pour habiller nos soirées jusqu'à l'aube.", title: "SOHO Night — Techno Room", note: "Line-up techno, 2 salles, jusqu'à l'aube 🖤", lat: 48.8566, lng: 2.3701, start: 25, end: 32 },
+    { email: "hello@neonclub.demo.giglink.app", name: "Néon Club", city: "Lyon", desc: "Soirées disco & funk à l'ancienne, boule à facettes obligatoire. On programme groupes live et DJ pour faire danser tout le monde.", title: "Néon — Disco Fever", note: "Boule à facettes, funk & disco ✨", lat: 45.7578, lng: 4.832, start: 27, end: 33 },
+    { email: "hello@cargosessions.demo.giglink.app", name: "Cargo Sessions", city: "Bordeaux", desc: "Warehouse au bord de l'eau, afro house et sets prolongés. Toujours à la recherche d'artistes pour nos sessions au bord des quais.", title: "Cargo Sessions — Afro House", note: "Warehouse au bord de l'eau, afro house 🌍", lat: 44.8451, lng: -0.5586, start: 6, end: 12 },
   ];
 
   for (const o of ORGANIZERS) {
-    await prisma.user.upsert({
+    const u = await prisma.user.upsert({
       where: { email: o.email },
       update: {},
       create: { email: o.email, passwordHash, role: "ORGANIZER", emailVerifiedAt: new Date() },
+    });
+    // Fiche organisateur : un profil PUBLISHED contactable, comme un artiste.
+    await prisma.profile.upsert({
+      where: { userId: u.id },
+      update: { displayName: o.name, bio: o.desc, city: o.city, status: "PUBLISHED" },
+      create: {
+        userId: u.id,
+        profileType: "ORGANIZER",
+        displayName: o.name,
+        bio: o.desc,
+        city: o.city,
+        status: "PUBLISHED",
+      },
     });
   }
 
@@ -740,11 +753,12 @@ async function main() {
     eventCount += 1;
   }
   for (const o of ORGANIZERS) {
-    const u = await prisma.user.findUnique({ where: { email: o.email } });
+    const u = await prisma.user.findUnique({ where: { email: o.email }, include: { profile: true } });
     if (!u) continue;
     await prisma.event.create({
       data: {
         ownerUserId: u.id,
+        profileId: u.profile?.id ?? null,
         kind: "ORGANIZER",
         title: o.title,
         note: o.note,

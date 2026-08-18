@@ -87,7 +87,12 @@ export default function MusicianPublicProfile() {
           <div>
             <h1 className="text-2xl font-semibold">{profile.displayName}</h1>
             <p className="mt-1 text-neutral-400">
-              {profile.profileType === "DJ" ? "DJ" : "Musicien"} · {profile.city}
+              {profile.profileType === "DJ"
+                ? "DJ"
+                : profile.profileType === "ORGANIZER"
+                  ? "🎉 Organisateur de soirées"
+                  : "Musicien"}{" "}
+              · {profile.city}
             </p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
               {profile.certificationsCount > 0 && (
@@ -246,18 +251,22 @@ export default function MusicianPublicProfile() {
             ) : (
               <div>
                 <p className="text-sm text-neutral-300">
-                  {user.role === "MUSICIAN"
-                    ? "🎸 Proposer de jouer ensemble / monter un groupe"
-                    : "Envoyer une demande de contact"}
+                  {profile.profileType === "ORGANIZER"
+                    ? "🎉 Contacter pour organiser une soirée"
+                    : user.role === "MUSICIAN"
+                      ? "🎸 Proposer de jouer ensemble / monter un groupe"
+                      : "Envoyer une demande de contact"}
                 </p>
                 <textarea
                   rows={3}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder={
-                    user.role === "MUSICIAN"
-                      ? "Présente-toi, ton projet, ton style, ce que tu cherches…"
-                      : "Décris ton événement, la date, le lieu..."
+                    profile.profileType === "ORGANIZER"
+                      ? "Ton projet de soirée, la date, le lieu, ce que tu cherches…"
+                      : user.role === "MUSICIAN"
+                        ? "Présente-toi, ton projet, ton style, ce que tu cherches…"
+                        : "Décris ton événement, la date, le lieu..."
                   }
                   className="mt-2 w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition-colors duration-200 focus:border-neutral-400"
                 />
