@@ -51,6 +51,21 @@ export async function signup(input: z.infer<typeof signupSchema>, ipAddress: str
     },
   });
 
+  // Un organisateur est une fiche contactable : on la crée dès l'inscription
+  // (publiée, nom déduit de l'email) pour qu'il soit tout de suite trouvable.
+  if (user.role === "ORGANIZER") {
+    const base = input.email.split("@")[0].replace(/[._-]+/g, " ").trim();
+    const displayName = base ? base.replace(/\b\w/g, (c) => c.toUpperCase()) : "Organisateur";
+    await prisma.profile.create({
+      data: {
+        userId: user.id,
+        profileType: "ORGANIZER",
+        displayName,
+        status: "PUBLISHED",
+      },
+    });
+  }
+
   const token = generateToken();
   await prisma.emailVerificationToken.create({
     data: {
