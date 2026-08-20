@@ -542,7 +542,21 @@ export default function MapPage() {
             </div>
             <div className="flex-1 overflow-y-auto">
               {sorted.length === 0 ? (
-                <p className="p-4 text-sm text-neutral-500">Aucun événement pour le moment.</p>
+                <div className="p-4 text-sm text-neutral-500">
+                  {kindFilter ? (
+                    <>
+                      <p>Aucun événement dans cette catégorie pour le moment.</p>
+                      <button
+                        onClick={() => setKindFilter("")}
+                        className="mt-2 font-medium text-violet-300 hover:text-violet-200"
+                      >
+                        ← Voir tout
+                      </button>
+                    </>
+                  ) : (
+                    <p>Aucun événement pour le moment.</p>
+                  )}
+                </div>
               ) : (
                 sorted.map((e) => {
                   const w = whenLabel(e.startsAt, e.endsAt);
