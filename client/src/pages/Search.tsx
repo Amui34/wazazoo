@@ -393,7 +393,19 @@ export default function Search() {
               {!isPending && !isFetching && results.length === 0 && (
                 <div className="mt-16 animate-fade-in-up text-center">
                   <p className="text-3xl">🎧</p>
-                  <p className="mt-3 text-sm text-neutral-500">Aucun artiste ne correspond à ces critères.</p>
+                  <p className="mt-3 text-sm text-neutral-300">Aucun artiste ne correspond à ces critères.</p>
+                  <p className="mt-1 text-sm text-neutral-500">Essaie d'élargir : enlève un filtre ou change de ville.</p>
+                  {(applied.kind || applied.styleId || applied.instrumentId || applied.city || applied.date || applied.budgetMax) && (
+                    <button
+                      onClick={() => {
+                        setDraft(EMPTY);
+                        setApplied(EMPTY);
+                      }}
+                      className="mt-4 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+                    >
+                      Réinitialiser les filtres
+                    </button>
+                  )}
                 </div>
               )}
             </>

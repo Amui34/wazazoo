@@ -121,6 +121,21 @@ export default function MapPage() {
     user?.role === "ORGANIZER" ||
     user?.role === "FESTIVAL";
   const [kindFilter, setKindFilter] = useState<"" | Category>("");
+  const [showTip, setShowTip] = useState(() => {
+    try {
+      return localStorage.getItem("wazazoo_map_tip_dismissed") !== "1";
+    } catch {
+      return true;
+    }
+  });
+  function dismissTip() {
+    setShowTip(false);
+    try {
+      localStorage.setItem("wazazoo_map_tip_dismissed", "1");
+    } catch {
+      // localStorage indisponible : on ignore, l'astuce réapparaîtra.
+    }
+  }
 
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
   const [search, setSearch] = useState("");
@@ -317,6 +332,23 @@ export default function MapPage() {
             <span className="font-semibold text-red-400">● {nowCount} en ce moment</span> ·{" "}
             {visibleEvents.length} événement{visibleEvents.length !== 1 ? "s" : ""} à l'affiche — DJ, live, festivals &amp; lieux.
           </p>
+
+          {showTip && (
+            <div className="mt-3 flex items-start gap-3 rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-2.5 text-sm text-violet-100">
+              <span>💡</span>
+              <p className="flex-1">
+                Filtre par <strong>DJ · Live · Festival · Lieux</strong>, cherche <strong>ta ville</strong> ou
+                clique <strong>« Autour de moi »</strong>, puis touche un point pour voir le détail.
+              </p>
+              <button
+                onClick={dismissTip}
+                aria-label="Fermer l'astuce"
+                className="shrink-0 text-violet-300 transition-colors hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
           {/* Filtre par type */}
           <div className="mt-3 flex flex-wrap gap-2">
