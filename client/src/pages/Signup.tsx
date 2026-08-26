@@ -108,6 +108,11 @@ export default function Signup({
             error={errors.password?.message}
             {...register("password")}
           />
+          {!errors.password && (
+            <p className="-mt-2 text-xs text-neutral-500">
+              Au moins 10 caractères, une majuscule et un chiffre.
+            </p>
+          )}
           <TextField
             id="confirmPassword"
             label="Confirmer le mot de passe"
