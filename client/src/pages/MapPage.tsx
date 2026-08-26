@@ -418,6 +418,14 @@ export default function MapPage() {
               ✨ Créer un événement
             </button>
           )}
+          {!user && (
+            <Link
+              to="/inscription"
+              className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-4 py-2 text-sm font-bold shadow-lg shadow-violet-500/25 transition-transform hover:-translate-y-0.5"
+            >
+              ✨ Rejoindre
+            </Link>
+          )}
         </div>
         {searchMsg && <p className="mb-3 text-xs text-neutral-400">{searchMsg}</p>}
 
