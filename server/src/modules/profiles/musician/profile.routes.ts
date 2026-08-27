@@ -59,7 +59,7 @@ profilesRouter.get(
   "/:id",
   optionalAuth,
   asyncHandler(async (req, res) => {
-    const profile = await profileService.getPublicProfile(req.params.id, req.userId);
+    const profile = await profileService.getPublicProfile(req.params.id, req.userId, req.userRole);
     res.json({ profile });
   })
 );

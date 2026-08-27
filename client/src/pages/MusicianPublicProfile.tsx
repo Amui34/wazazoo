@@ -108,6 +108,11 @@ export default function MusicianPublicProfile() {
                   {profile.rateMin ?? "?"}–{profile.rateMax ?? "?"} € / prestation
                 </Badge>
               )}
+              {profile.ratesVisible === false && profile.profileType !== "ORGANIZER" && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-neutral-700 px-2.5 py-0.5 text-xs text-neutral-400">
+                  💼 Tarifs réservés aux recruteurs
+                </span>
+              )}
             </div>
 
             <div className="mt-3 flex justify-center sm:justify-start">

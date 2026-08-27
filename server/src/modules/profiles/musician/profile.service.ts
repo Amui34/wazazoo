@@ -182,7 +182,11 @@ export async function publishOwnProfile(userId: string, ipAddress: string | unde
   return getOrCreateOwnProfile(userId);
 }
 
-export async function getPublicProfile(profileId: string, viewerUserId: string | undefined) {
+export async function getPublicProfile(
+  profileId: string,
+  viewerUserId: string | undefined,
+  viewerRole: string | undefined
+) {
   const profile = await findProfileWithRelations(profileId);
   if (!profile) {
     throw new AppError(404, "profile_not_found", "Profil introuvable.");
@@ -202,7 +206,23 @@ export async function getPublicProfile(profileId: string, viewerUserId: string |
     ? (await prisma.follow.count({ where: { userId: viewerUserId, profileId } })) > 0
     : false;
 
-  return { ...shapePublicProfile(profile), followersCount, isFollowing };
+  // Le tarif des prestations n'est visible que par le propriétaire et par les
+  // potentiels recruteurs (recruteur, organisateur, festival, admin) — pas par
+  // les visiteurs lambda ni les touristes.
+  const isOwner = profile.userId === viewerUserId;
+  const isPro =
+    !!viewerRole && ["RECRUITER", "ORGANIZER", "FESTIVAL", "ADMIN"].includes(viewerRole);
+  const ratesVisible = isOwner || isPro;
+
+  const shaped = shapePublicProfile(profile);
+  return {
+    ...shaped,
+    rateMin: ratesVisible ? shaped.rateMin : null,
+    rateMax: ratesVisible ? shaped.rateMax : null,
+    ratesVisible,
+    followersCount,
+    isFollowing,
+  };
 }
 
 export async function addMedia(userId: string, input: z.infer<typeof addMediaSchema>) {

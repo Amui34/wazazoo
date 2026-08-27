@@ -37,6 +37,7 @@ export type MusicianProfile = {
   rateMin: number | null;
   rateMax: number | null;
   rateCurrency: string;
+  ratesVisible?: boolean;
   status: "DRAFT" | "PUBLISHED" | "SUSPENDED";
   viewsCount: number;
   styles: RefOption[];
