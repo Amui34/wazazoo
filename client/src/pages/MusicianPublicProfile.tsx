@@ -156,10 +156,42 @@ export default function MusicianPublicProfile() {
 
         {profile.bio && (
           <Reveal delay={120}>
-            <p className="mt-6 whitespace-pre-line text-neutral-300">{profile.bio}</p>
+            <p className={`mt-6 whitespace-pre-line text-neutral-300 ${!user ? "line-clamp-3" : ""}`}>
+              {profile.bio}
+            </p>
           </Reveal>
         )}
 
+        {/* Visiteur non connecté : aperçu limité + invitation à débloquer le reste. */}
+        {!user && (
+          <Reveal
+            delay={140}
+            className="mt-8 rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-500/12 to-fuchsia-500/[0.06] p-6 text-center"
+          >
+            <p className="text-2xl">🔒</p>
+            <h2 className="mt-2 text-lg font-semibold">Vois le profil complet de {profile.displayName}</h2>
+            <p className="mx-auto mt-1 max-w-md text-sm text-neutral-300">
+              Bio complète, médias, avis &amp; certifications, disponibilités et contact — c'est gratuit.
+            </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              <Link
+                to="/inscription"
+                className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+              >
+                Créer un compte gratuit
+              </Link>
+              <Link
+                to="/connexion"
+                className="rounded-full border border-neutral-600 px-5 py-2 text-sm font-medium text-neutral-200 transition-colors hover:border-neutral-400"
+              >
+                Se connecter
+              </Link>
+            </div>
+          </Reveal>
+        )}
+
+        {user && (
+          <>
         {profile.profileType === "DJ" && profile.equipmentNotes && (
           <Reveal delay={140} className="mt-6">
             <h2 className="font-medium">Matériel / setup</h2>
@@ -239,15 +271,6 @@ export default function MusicianPublicProfile() {
         )}
 
         <Reveal className="mt-10 rounded-md border border-neutral-800 p-5 transition-colors duration-300 hover:border-neutral-700">
-          {!user && (
-            <p className="text-sm text-neutral-400">
-              <Link to="/connexion" className="text-white underline">
-                Connecte-toi
-              </Link>{" "}
-              pour contacter cet artiste.
-            </p>
-          )}
-
           {user && ["RECRUITER", "ORGANIZER", "FESTIVAL", "MUSICIAN"].includes(user.role) &&
             (sent ? (
               <p className="animate-fade-in-up text-sm text-emerald-400">
@@ -292,6 +315,8 @@ export default function MusicianPublicProfile() {
             </p>
           )}
         </Reveal>
+          </>
+        )}
       </div>
 
       <Footer />
