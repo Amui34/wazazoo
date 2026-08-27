@@ -656,29 +656,31 @@ async function main() {
   // --- Événements de démo (carte + agenda) ---
   const HOUR = 60 * 60 * 1000;
   // Événements d'artistes (kind ARTIST) : startOffset/endOffset en heures depuis maintenant
+  // Horaires en heures depuis maintenant. Plusieurs événements « en ce moment »
+  // (start négatif) avec de longs créneaux, pour une démo toujours vivante.
   const ARTIST_EVENTS = [
-    { email: "clara.jazz@demo.giglink.app", lat: 48.8606, lng: 2.3376, note: "Set jazz devant le Louvre 🎷", start: -1, end: 2 },
-    { email: "malik.guitare@demo.giglink.app", lat: 45.7597, lng: 4.8422, note: "Reprises acoustiques Presqu'île 🎸", start: 0.5, end: 3 },
-    { email: "sofia.violon@demo.giglink.app", lat: 43.2951, lng: 5.3746, note: "Violon sur le Vieux-Port 🎻", start: 2, end: 5 },
-    { email: "amelie.piano@demo.giglink.app", lat: 48.853, lng: 2.3499, note: "Piano voix, parvis Notre-Dame 🎹", start: 4, end: 7 },
+    { email: "clara.jazz@demo.giglink.app", lat: 48.8606, lng: 2.3376, note: "Set jazz devant le Louvre 🎷", start: -2, end: 8 },
+    { email: "malik.guitare@demo.giglink.app", lat: 45.7597, lng: 4.8422, note: "Reprises acoustiques Presqu'île 🎸", start: -1, end: 7 },
+    { email: "sofia.violon@demo.giglink.app", lat: 43.2951, lng: 5.3746, note: "Violon sur le Vieux-Port 🎻", start: -0.5, end: 9 },
+    { email: "amelie.piano@demo.giglink.app", lat: 48.853, lng: 2.3499, note: "Piano voix, parvis Notre-Dame 🎹", start: 4, end: 11 },
     { email: "yanis.traore@demo.giglink.app", lat: 43.6045, lng: 1.4442, note: "Beatbox place du Capitole 🎤", start: 24, end: 27 },
     { email: "hugo.faure@demo.giglink.app", lat: 43.2965, lng: 5.3698, note: "Reggae terrasse, cours Julien 🌴", start: 26, end: 29 },
-    { email: "dj.nova@demo.giglink.app", lat: 48.8566, lng: 2.3522, note: "DJ set électro au parc 🎧", start: 1, end: 4 },
-    { email: "dj.mika@demo.giglink.app", lat: 45.7597, lng: 4.8422, note: "Warm-up house en terrasse 🎛️", start: 3, end: 6 },
+    { email: "dj.nova@demo.giglink.app", lat: 48.8566, lng: 2.3522, note: "DJ set électro au parc 🎧", start: -1, end: 10 },
+    { email: "dj.mika@demo.giglink.app", lat: 45.7597, lng: 4.8422, note: "Warm-up house en terrasse 🎛️", start: -0.5, end: 8 },
   ];
   // Événements d'établissements (kind VENUE) : postés par des recruteurs
   const VENUE_EVENTS = [
-    { email: "contact@le-petit-bistrot.demo.giglink.app", title: "Jam session ouverte", note: "Scène ouverte tous styles, entrée libre 🎶", lat: 48.8649, lng: 2.3417, start: 3, end: 7 },
+    { email: "contact@le-petit-bistrot.demo.giglink.app", title: "Jam session ouverte", note: "Scène ouverte tous styles, entrée libre 🎶", lat: 48.8649, lng: 2.3417, start: -1, end: 9 },
     { email: "booking@salle-eclipse.demo.giglink.app", title: "Soirée Électro Éclipse", note: "3 DJ, jusqu'au bout de la nuit 🔊", lat: 45.764, lng: 4.8357, start: 25, end: 31 },
-    { email: "contact@comptoir-du-sud.demo.giglink.app", title: "Apéro concert live", note: "Concert + tapas en terrasse ☀️", lat: 43.2965, lng: 5.37, start: 5, end: 8 },
+    { email: "contact@comptoir-du-sud.demo.giglink.app", title: "Apéro concert live", note: "Concert + tapas en terrasse ☀️", lat: 43.2965, lng: 5.37, start: -0.5, end: 10 },
   ];
 
   // Organisateurs de soirées (comptes ORGANIZER) + leurs soirées (kind ORGANIZER)
   const ORGANIZERS = [
-    { email: "hello@labubble.demo.giglink.app", name: "La Bubble", city: "Paris", desc: "Collectif de soirées rooftop : house, cocktails et coucher de soleil sur les toits de Paris. On booke DJ et lives pour des événements chics et festifs.", title: "La Bubble — Rooftop Sunset", note: "Coucher de soleil, house & cocktails 🫧", lat: 48.8722, lng: 2.3489, start: 4, end: 9 },
+    { email: "hello@labubble.demo.giglink.app", name: "La Bubble", city: "Paris", desc: "Collectif de soirées rooftop : house, cocktails et coucher de soleil sur les toits de Paris. On booke DJ et lives pour des événements chics et festifs.", title: "La Bubble — Rooftop Sunset", note: "Coucher de soleil, house & cocktails 🫧", lat: 48.8722, lng: 2.3489, start: -2, end: 11 },
     { email: "hello@soho.demo.giglink.app", name: "SOHO", city: "Paris", desc: "Organisateur de nuits techno pointues, 2 salles, line-ups internationaux. On cherche des artistes pour habiller nos soirées jusqu'à l'aube.", title: "SOHO Night — Techno Room", note: "Line-up techno, 2 salles, jusqu'à l'aube 🖤", lat: 48.8566, lng: 2.3701, start: 25, end: 32 },
     { email: "hello@neonclub.demo.giglink.app", name: "Néon Club", city: "Lyon", desc: "Soirées disco & funk à l'ancienne, boule à facettes obligatoire. On programme groupes live et DJ pour faire danser tout le monde.", title: "Néon — Disco Fever", note: "Boule à facettes, funk & disco ✨", lat: 45.7578, lng: 4.832, start: 27, end: 33 },
-    { email: "hello@cargosessions.demo.giglink.app", name: "Cargo Sessions", city: "Bordeaux", desc: "Warehouse au bord de l'eau, afro house et sets prolongés. Toujours à la recherche d'artistes pour nos sessions au bord des quais.", title: "Cargo Sessions — Afro House", note: "Warehouse au bord de l'eau, afro house 🌍", lat: 44.8451, lng: -0.5586, start: 6, end: 12 },
+    { email: "hello@cargosessions.demo.giglink.app", name: "Cargo Sessions", city: "Bordeaux", desc: "Warehouse au bord de l'eau, afro house et sets prolongés. Toujours à la recherche d'artistes pour nos sessions au bord des quais.", title: "Cargo Sessions — Afro House", note: "Warehouse au bord de l'eau, afro house 🌍", lat: 44.8451, lng: -0.5586, start: -1, end: 14 },
   ];
 
   for (const o of ORGANIZERS) {
@@ -705,7 +707,7 @@ async function main() {
   // Festivals (comptes FESTIVAL) + leurs événements (kind FESTIVAL)
   const FESTIVALS = [
     { email: "hello@sunwave.demo.giglink.app", name: "Sunwave Festival", title: "Sunwave Festival — Jour 1", note: "3 scènes, camping, line-up international 🎪🌞", lat: 43.6108, lng: 3.8767, start: 30, end: 42 },
-    { email: "hello@echofest.demo.giglink.app", name: "Echo Festival", title: "Echo Festival — Open Air", note: "Électro en plein air, food trucks 🌌", lat: 47.2184, lng: -1.5536, start: 50, end: 62 },
+    { email: "hello@echofest.demo.giglink.app", name: "Echo Festival", title: "Echo Festival — Open Air", note: "Électro en plein air, food trucks 🌌", lat: 47.2184, lng: -1.5536, start: -4, end: 30 },
   ];
   for (const f of FESTIVALS) {
     await prisma.user.upsert({
