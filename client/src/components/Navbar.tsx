@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../features/auth/AuthContext.js";
 import { listNotifications } from "../features/social/api.js";
 import { UserMenu } from "./UserMenu.js";
+import { Logo } from "./Logo.js";
 
 const linkCls = "text-sm text-neutral-300 transition-colors duration-200 hover:text-white";
 
@@ -20,8 +21,8 @@ export function Navbar() {
   return (
     <header className="border-b border-neutral-800">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link to="/" className="text-lg font-bold tracking-tight text-white hover:opacity-80">
-          WAZAZOO
+        <Link to="/" className="transition-opacity hover:opacity-80">
+          <Logo />
         </Link>
 
         <nav className="flex items-center gap-4">
