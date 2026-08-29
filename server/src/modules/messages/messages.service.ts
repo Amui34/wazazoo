@@ -3,6 +3,14 @@ import { AppError } from "../../lib/errors.js";
 import type { z } from "zod";
 import type { sendMessageSchema } from "./messages.schema.js";
 
+// Nom lisible du demandeur : son nom de profil s'il en a un (organisateur,
+// musicien), sinon un email embelli (contact@le-petit-bistrot → « Le Petit Bistrot »).
+function requesterName(recruiter: { email: string; profile?: { displayName: string } | null }) {
+  if (recruiter.profile?.displayName) return recruiter.profile.displayName;
+  const base = recruiter.email.split("@")[0].replace(/[._-]+/g, " ").trim();
+  return base ? base.replace(/\b\w/g, (c) => c.toUpperCase()) : recruiter.email;
+}
+
 // Charge une conversation et vérifie que l'utilisateur en fait partie et
 // que la demande a bien été acceptée (RGPD : pas de messagerie avant accord).
 async function loadThread(contactRequestId: string, userId: string) {
@@ -10,7 +18,7 @@ async function loadThread(contactRequestId: string, userId: string) {
     where: { id: contactRequestId },
     include: {
       profile: { select: { id: true, userId: true, displayName: true } },
-      recruiter: { select: { id: true, email: true } },
+      recruiter: { select: { id: true, email: true, profile: { select: { displayName: true } } } },
     },
   });
   if (!cr) {
@@ -35,7 +43,7 @@ export async function listConversations(userId: string) {
     },
     include: {
       profile: { select: { id: true, displayName: true } },
-      recruiter: { select: { id: true, email: true } },
+      recruiter: { select: { id: true, email: true, profile: { select: { displayName: true } } } },
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
     },
   });
@@ -50,7 +58,7 @@ export async function listConversations(userId: string) {
       return {
         contactRequestId: cr.id,
         profileId: cr.profile.id,
-        otherName: isRecruiter ? cr.profile.displayName : cr.recruiter.email,
+        otherName: isRecruiter ? cr.profile.displayName : requesterName(cr.recruiter),
         role: isRecruiter ? ("RECRUITER" as const) : ("MUSICIAN" as const),
         lastMessage: last?.body ?? null,
         lastAt: last?.createdAt ?? cr.respondedAt ?? cr.createdAt,
