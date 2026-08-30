@@ -26,15 +26,15 @@ export function Logo({
             <stop offset="1" stopColor="#9b7bff" />
           </linearGradient>
         </defs>
-        <path
-          d="M16 1.5c-5.8 0-10 4.3-10 9.9 0 6.9 8.4 16.4 9.3 17.4a1 1 0 0 0 1.5 0c.9-1 9.3-10.5 9.3-17.4 0-5.6-4.2-9.9-10-9.9Z"
-          fill="url(#wz-grad)"
-        />
-        {/* Micro simple, en négatif (couleur du fond) dans le pin */}
-        <g fill="#0c0912">
-          <rect x="13.4" y="5.4" width="5.2" height="8" rx="2.6" />
-          <rect x="15.4" y="13.2" width="1.2" height="2.3" />
-          <rect x="13.2" y="15" width="5.6" height="1.3" rx="0.65" />
+        {/* Manche du micro se terminant en pointe — silhouette de pin de carte */}
+        <path d="M12.4 12.5 h7.2 v9.5 L16 30.5 12.4 22 Z" fill="url(#wz-grad)" />
+        {/* Tête / grille du micro */}
+        <circle cx="16" cy="10" r="8.4" fill="url(#wz-grad)" />
+        {/* Lignes de grille, en négatif */}
+        <g stroke="#0c0912" strokeWidth="1.4" strokeLinecap="round">
+          <line x1="10.8" y1="7.2" x2="21.2" y2="7.2" />
+          <line x1="9.6" y1="10" x2="22.4" y2="10" />
+          <line x1="10.8" y1="12.8" x2="21.2" y2="12.8" />
         </g>
       </svg>
       {showText && (
