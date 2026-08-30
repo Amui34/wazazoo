@@ -8,5 +8,9 @@
   </defs>
   <rect width="32" height="32" rx="7" fill="#0c0912"/>
   <path d="M16 4c-4.4 0-7.6 3.3-7.6 7.5 0 5.2 6.4 12.5 7.1 13.3a.7.7 0 0 0 1.1 0c.7-.8 7.1-8.1 7.1-13.3C23.6 7.3 20.4 4 16 4Z" fill="url(#g)"/>
-  <circle cx="16" cy="11.2" r="2.8" fill="#0c0912"/>
+  <g fill="#0c0912">
+    <rect x="13.9" y="6.6" width="4.2" height="6.6" rx="2.1"/>
+    <rect x="15.5" y="12.9" width="1" height="2"/>
+    <rect x="13.8" y="14.5" width="4.4" height="1.1" rx="0.55"/>
+  </g>
 </svg>

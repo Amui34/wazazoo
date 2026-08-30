@@ -30,7 +30,12 @@ export function Logo({
           d="M16 1.5c-5.8 0-10 4.3-10 9.9 0 6.9 8.4 16.4 9.3 17.4a1 1 0 0 0 1.5 0c.9-1 9.3-10.5 9.3-17.4 0-5.6-4.2-9.9-10-9.9Z"
           fill="url(#wz-grad)"
         />
-        <circle cx="16" cy="11.4" r="3.7" fill="#0c0912" />
+        {/* Micro simple, en négatif (couleur du fond) dans le pin */}
+        <g fill="#0c0912">
+          <rect x="13.4" y="5.4" width="5.2" height="8" rx="2.6" />
+          <rect x="15.4" y="13.2" width="1.2" height="2.3" />
+          <rect x="13.2" y="15" width="5.6" height="1.3" rx="0.65" />
+        </g>
       </svg>
       {showText && (
         <span className="text-lg font-black tracking-tight text-white" style={{ letterSpacing: "-0.01em" }}>
