@@ -49,7 +49,7 @@ const CAT_META: Record<Category, { color: string; emoji: string; label: string }
   DJ: { color: "#22d3ee", emoji: "🎧", label: "DJ" },
   LIVE: { color: "#8b5cf6", emoji: "🎵", label: "Live" },
   FESTIVAL: { color: "#f43f5e", emoji: "🎪", label: "Festival" },
-  LIEUX: { color: "#f59e0b", emoji: "📍", label: "Lieux" },
+  LIEUX: { color: "#8b8fa3", emoji: "📍", label: "Lieux" },
 };
 function eventCategory(e: WazaEvent): Category {
   if (e.kind === "FESTIVAL") return "FESTIVAL";
@@ -59,6 +59,17 @@ function eventCategory(e: WazaEvent): Category {
 }
 
 function pin(cat: Category | "NEW") {
+  // Lieux : point discret façon Google (petit, gris, sans emoji) — les horaires
+  // et le détail sont dans la popup / l'agenda.
+  if (cat === "LIEUX") {
+    return L.divIcon({
+      className: "",
+      html: `<div style="width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#8b8fa3;border:2px solid #dfe1e8;box-shadow:0 1px 4px rgba(0,0,0,.35);opacity:.92"></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 16],
+      popupAnchor: [0, -15],
+    });
+  }
   const bg = cat === "NEW" ? "#22c55e" : CAT_META[cat].color;
   const emoji = cat === "NEW" ? "📍" : CAT_META[cat].emoji;
   return L.divIcon({
@@ -313,7 +324,6 @@ export default function MapPage() {
     { key: "DJ", label: "🎧 DJ" },
     { key: "LIVE", label: "🎵 Live" },
     { key: "FESTIVAL", label: "🎪 Festival" },
-    { key: "LIEUX", label: "📍 Lieux" },
   ];
 
   return (
@@ -330,15 +340,16 @@ export default function MapPage() {
           </h1>
           <p className="mt-2 text-sm text-neutral-400">
             <span className="font-semibold text-red-400">● {nowCount} en ce moment</span> ·{" "}
-            {visibleEvents.length} événement{visibleEvents.length !== 1 ? "s" : ""} à l'affiche — DJ, live, festivals &amp; lieux.
+            {visibleEvents.length} événement{visibleEvents.length !== 1 ? "s" : ""} à l'affiche — DJ, live &amp; festivals. Les lieux apparaissent discrètement.
           </p>
 
           {showTip && (
             <div className="mt-3 flex items-start gap-3 rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-2.5 text-sm text-violet-100">
               <span>💡</span>
               <p className="flex-1">
-                Filtre par <strong>DJ · Live · Festival · Lieux</strong>, cherche <strong>ta ville</strong> ou
-                clique <strong>« Autour de moi »</strong>, puis touche un point pour voir le détail.
+                Filtre par <strong>DJ · Live · Festival</strong>, cherche <strong>ta ville</strong> ou clique{" "}
+                <strong>« Autour de moi »</strong>, puis touche un point pour voir le détail. Les lieux
+                apparaissent en gris.
               </p>
               <button
                 onClick={dismissTip}
