@@ -40,6 +40,13 @@ function ClickToPlace({ active, onPlace }: { active: boolean; onPlace: (ll: { la
   return null;
 }
 
+// Suit le niveau de zoom (les lieux n'apparaissent qu'en zoomant, façon Google).
+const LIEUX_MIN_ZOOM = 11;
+function ZoomWatch({ onZoom }: { onZoom: (z: number) => void }) {
+  const map = useMapEvents({ zoomend: () => onZoom(map.getZoom()) });
+  return null;
+}
+
 // Catégories affichées, déduites automatiquement du type d'événement + du profil :
 //  - Festival (compte FESTIVAL) → Festival
 //  - Lieu / organisateur (VENUE, ORGANIZER) → Lieux
@@ -132,6 +139,7 @@ export default function MapPage() {
     user?.role === "ORGANIZER" ||
     user?.role === "FESTIVAL";
   const [kindFilter, setKindFilter] = useState<"" | Category>("");
+  const [zoom, setZoom] = useState(6);
   const [showTip, setShowTip] = useState(() => {
     try {
       return localStorage.getItem("wazazoo_map_tip_dismissed") !== "1";
@@ -522,12 +530,27 @@ export default function MapPage() {
         {/* Carte + agenda */}
         <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
           <div className="overflow-hidden rounded-2xl border border-neutral-800" style={{ height: "68vh" }}>
+            {/* Zoom relooké « ampli » : + = monter (violet), simple et arrondi */}
+            <style>{`
+              .leaflet-control-zoom { border: none !important; border-radius: 16px !important; overflow: hidden;
+                box-shadow: 0 6px 18px rgba(0,0,0,.55); margin: 14px !important; }
+              .leaflet-control-zoom a { width: 42px !important; height: 42px !important; line-height: 42px !important;
+                background: #17121f !important; color: #cbc3e4 !important; border: none !important;
+                font-size: 24px !important; font-weight: 800; transition: filter .15s; }
+              .leaflet-control-zoom a:hover { filter: brightness(1.15); }
+              .leaflet-control-zoom-in { color: #fff !important;
+                background: linear-gradient(180deg, #9b7bff, #7c5cf0) !important;
+                border-bottom: 1px solid rgba(255,255,255,.12) !important; }
+            `}</style>
             <MapContainer center={[46.6, 2.4]} zoom={6} scrollWheelZoom style={{ height: "100%", width: "100%" }}>
               <FitBounds points={points} />
               <FlyTo target={flyTarget} />
               <ClickToPlace active={panelOpen} onPlace={(ll) => setNewLoc(ll)} />
+              <ZoomWatch onZoom={setZoom} />
               <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {visibleEvents.map((e) => (
+              {visibleEvents
+                .filter((e) => eventCategory(e) !== "LIEUX" || zoom >= LIEUX_MIN_ZOOM)
+                .map((e) => (
                 <Marker key={e.id} position={[e.lat, e.lng]} icon={pin(eventCategory(e))}>
                   <Popup>
                     <div style={{ minWidth: 170 }}>
