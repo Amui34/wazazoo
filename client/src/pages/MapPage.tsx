@@ -8,6 +8,7 @@ import { Navbar } from "../components/Navbar.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { useAuth } from "../features/auth/AuthContext.js";
 import { listActiveEvents, createEvent, deleteEvent, listMyEvents, type WazaEvent } from "../features/events/api.js";
+import { listVenueListings, claimListing, type Bbox } from "../features/venue-listings/api.js";
 import { useAutoEndLiveOnMove } from "../features/events/useAutoEndLiveOnMove.js";
 import { getApiErrorMessage } from "../lib/api.js";
 
@@ -88,6 +89,56 @@ function pin(cat: Category | "NEW") {
   });
 }
 
+// ---- Lieux réels (OpenStreetMap) --------------------------------------------
+// Affichés « de base » façon Google, mais seulement en zoom rapproché pour ne
+// pas surcharger. Un lieu revendiqué (géré par l'établissement) est mis en avant.
+const LISTING_MIN_ZOOM = 15;
+const LISTING_META: Record<string, { emoji: string; label: string }> = {
+  bar: { emoji: "🍸", label: "Bar" },
+  pub: { emoji: "🍺", label: "Pub" },
+  nightclub: { emoji: "🎶", label: "Club" },
+  biergarten: { emoji: "🍺", label: "Biergarten" },
+  cafe: { emoji: "☕", label: "Café" },
+  restaurant: { emoji: "🍴", label: "Restaurant" },
+};
+const listingMeta = (c: string) => LISTING_META[c] ?? { emoji: "📍", label: "Lieu" };
+
+function listingIcon(category: string, claimed: boolean) {
+  const m = listingMeta(category);
+  if (claimed) {
+    return L.divIcon({
+      className: "",
+      html: `<div style="width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid #7c5cf0;box-shadow:0 2px 8px rgba(124,92,240,.55);display:flex;align-items:center;justify-content:center;font-size:14px">${m.emoji}</div>`,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+      popupAnchor: [0, -13],
+    });
+  }
+  return L.divIcon({
+    className: "",
+    html: `<div style="width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:10px;opacity:.9">${m.emoji}</div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+    popupAnchor: [0, -9],
+  });
+}
+
+// Remonte le zoom + l'emprise visible (pour charger les lieux réels de la zone).
+function BoundsWatch({ onChange }: { onChange: (zoom: number, bbox: Bbox) => void }) {
+  const map = useMapEvents({
+    moveend: () => {
+      const b = map.getBounds();
+      onChange(map.getZoom(), {
+        south: b.getSouth(),
+        west: b.getWest(),
+        north: b.getNorth(),
+        east: b.getEast(),
+      });
+    },
+  });
+  return null;
+}
+
 // ---- Helpers date/heure -----------------------------------------------------
 const pad = (n: number) => String(n).padStart(2, "0");
 const timeStr = (iso: string) =>
@@ -141,6 +192,7 @@ export default function MapPage() {
     user?.role === "VENUE";
   const [kindFilter, setKindFilter] = useState<"" | Category>("");
   const [zoom, setZoom] = useState(6);
+  const [bbox, setBbox] = useState<Bbox | null>(null);
   const [showTip, setShowTip] = useState(() => {
     try {
       return localStorage.getItem("wazazoo_map_tip_dismissed") !== "1";
@@ -182,6 +234,21 @@ export default function MapPage() {
     queryKey: ["events-mine"],
     queryFn: listMyEvents,
     enabled: canCreate,
+  });
+
+  // Lieux réels (OSM) de la zone visible, seulement en zoom rapproché.
+  const listingsEnabled = zoom >= LISTING_MIN_ZOOM && !!bbox;
+  const bboxKey = bbox
+    ? [bbox.south, bbox.west, bbox.north, bbox.east].map((n) => n.toFixed(3)).join(",")
+    : "";
+  const { data: listings = [] } = useQuery({
+    queryKey: ["venue-listings", bboxKey],
+    queryFn: () => listVenueListings(bbox!, 300),
+    enabled: listingsEnabled,
+  });
+  const claimMutation = useMutation({
+    mutationFn: (id: string) => claimListing(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["venue-listings"] }),
   });
 
   const visibleEvents = useMemo(
@@ -349,7 +416,7 @@ export default function MapPage() {
           </h1>
           <p className="mt-2 text-sm text-neutral-400">
             <span className="font-semibold text-red-400">● {nowCount} en ce moment</span> ·{" "}
-            {visibleEvents.length} événement{visibleEvents.length !== 1 ? "s" : ""} à l'affiche — DJ, live &amp; festivals. Les lieux apparaissent discrètement.
+            {visibleEvents.length} événement{visibleEvents.length !== 1 ? "s" : ""} à l'affiche — DJ, live &amp; festivals. Zoome pour voir les vrais lieux du quartier.
           </p>
 
           {showTip && (
@@ -357,8 +424,8 @@ export default function MapPage() {
               <span>💡</span>
               <p className="flex-1">
                 Filtre par <strong>DJ · Live · Festival</strong>, cherche <strong>ta ville</strong> ou clique{" "}
-                <strong>« Autour de moi »</strong>, puis touche un point pour voir le détail. Les lieux
-                apparaissent en gris.
+                <strong>« Autour de moi »</strong>, puis touche un point pour voir le détail. Zoome pour
+                voir les <strong>vrais lieux</strong> du quartier (bars, restos…).
               </p>
               <button
                 onClick={dismissTip}
@@ -548,6 +615,12 @@ export default function MapPage() {
               <FlyTo target={flyTarget} />
               <ClickToPlace active={panelOpen} onPlace={(ll) => setNewLoc(ll)} />
               <ZoomWatch onZoom={setZoom} />
+              <BoundsWatch
+                onChange={(z, b) => {
+                  setZoom(z);
+                  setBbox(b);
+                }}
+              />
               <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               {visibleEvents
                 .filter((e) => eventCategory(e) !== "LIEUX" || zoom >= LIEUX_MIN_ZOOM)
@@ -570,6 +643,68 @@ export default function MapPage() {
                   </Popup>
                 </Marker>
               ))}
+              {/* Lieux réels (OSM), façon Google, en zoom rapproché */}
+              {listingsEnabled &&
+                listings.map((l) => (
+                  <Marker key={l.id} position={[l.lat, l.lng]} icon={listingIcon(l.category, l.claimed)}>
+                    <Popup>
+                      <div style={{ minWidth: 190 }}>
+                        <strong>
+                          {listingMeta(l.category).emoji} {l.name}
+                        </strong>
+                        <div style={{ color: "#666", fontSize: 12 }}>
+                          {listingMeta(l.category).label}
+                          {l.address ? ` · ${l.address}` : ""}
+                        </div>
+                        {l.openingHours && (
+                          <div style={{ marginTop: 4, fontSize: 12 }}>🕒 {l.openingHours}</div>
+                        )}
+                        {l.website && (
+                          <div style={{ marginTop: 4 }}>
+                            <a href={l.website} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "#7c3aed" }}>
+                              Site web →
+                            </a>
+                          </div>
+                        )}
+                        <div style={{ marginTop: 6, borderTop: "1px solid #eee", paddingTop: 6, fontSize: 12 }}>
+                          {l.claimed ? (
+                            <span style={{ color: "#059669", fontWeight: 600 }}>
+                              ✓ Géré par l'établissement
+                              {l.claimedProfileId && (
+                                <>
+                                  {" · "}
+                                  <Link to={`/musiciens/${l.claimedProfileId}`} style={{ color: "#7c3aed" }}>
+                                    voir la page
+                                  </Link>
+                                </>
+                              )}
+                            </span>
+                          ) : user?.role === "VENUE" ? (
+                            <button
+                              onClick={() => claimMutation.mutate(l.id)}
+                              disabled={claimMutation.isPending}
+                              style={{ color: "#7c3aed", fontWeight: 600, background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                            >
+                              C'est mon établissement — revendiquer
+                            </button>
+                          ) : (
+                            <span style={{ color: "#999" }}>
+                              Fiche non revendiquée
+                              {!user && (
+                                <>
+                                  {" · "}
+                                  <Link to="/inscription/lieu" style={{ color: "#7c3aed" }}>
+                                    c'est votre lieu ?
+                                  </Link>
+                                </>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
               {newLoc && <Marker position={[newLoc.lat, newLoc.lng]} icon={pin("NEW")} />}
             </MapContainer>
           </div>

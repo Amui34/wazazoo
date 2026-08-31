@@ -11,7 +11,7 @@
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "prisma:seed": "tsx prisma/seed.ts",
-    "seed:montpellier": "tsx prisma/seed-montpellier.ts"
+    "seed:venues-osm": "tsx prisma/seed-venues-osm.ts"
   },
   "dependencies": {
     "express": "^4.19.2",

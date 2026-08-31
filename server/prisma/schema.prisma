@@ -205,6 +205,7 @@ model Profile {
   contactRequests ContactRequest[] @relation("MusicianRequests")
   events          Event[]          @relation("ProfileEvents")
   followers       Follow[]         @relation("ProfileFollowers")
+  claimedListing  VenueListing?    @relation("VenueClaim")
 
   @@map("profiles")
 }
@@ -356,6 +357,31 @@ model Venue {
   certifications Certification[]
 
   @@map("venues")
+}
+
+// Lieux réels importés d'OpenStreetMap (bars, restos, clubs…). Affichés « de
+// base » sur la carte comme fiches non revendiquées. Quand le gérant crée son
+// compte et revendique le lieu, on relie claimedProfileId à sa fiche VENUE.
+model VenueListing {
+  id               String   @id @default(uuid())
+  source           String   @default("osm")
+  sourceRef        String   @unique // ex. "node/70952868"
+  name             String
+  category         String // bar | pub | nightclub | cafe | restaurant
+  lat              Float
+  lng              Float
+  address          String?
+  city             String?
+  openingHours     String?
+  website          String?
+  phone            String?
+  claimedProfileId String?  @unique
+  claimedProfile   Profile? @relation("VenueClaim", fields: [claimedProfileId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([lat, lng])
+  @@map("venue_listings")
 }
 
 // Anti-abuse flow: the musician creates a PENDING row with a unique
