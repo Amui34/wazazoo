@@ -58,9 +58,13 @@ export async function createEvent(
       throw new AppError(400, "title_required", "Donne un titre à ton événement.");
     }
     const kind = role === "ORGANIZER" ? "ORGANIZER" : role === "FESTIVAL" ? "FESTIVAL" : "VENUE";
-    return prisma.event.create({
+    // Lieux, organisateurs et festivals ont une fiche : on lie la soirée à leur
+    // fiche (affichage carte + page) et on prévient leurs abonnés.
+    const profile = await prisma.profile.findUnique({ where: { userId } });
+    const event = await prisma.event.create({
       data: {
         ownerUserId: userId,
+        profileId: profile?.id ?? null,
         kind,
         title: input.title.trim(),
         note: input.note ?? null,
@@ -70,6 +74,18 @@ export async function createEvent(
         endsAt,
       },
     });
+    if (profile) {
+      const isLiveNow = startsAt <= new Date();
+      const icon = role === "VENUE" ? "🍸" : role === "FESTIVAL" ? "🎪" : "🎉";
+      await notifyFollowers(profile.id, {
+        type: "SOIREE",
+        message: isLiveNow
+          ? `🔴 ${profile.displayName} — « ${event.title} », c'est maintenant !`
+          : `${icon} ${profile.displayName} organise une soirée : « ${event.title} ».`,
+        link: `/musiciens/${profile.id}`,
+      }).catch(() => {});
+    }
+    return event;
   }
 
   throw new AppError(403, "forbidden", "Action non autorisée.");

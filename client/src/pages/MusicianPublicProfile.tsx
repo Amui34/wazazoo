@@ -140,6 +140,15 @@ export default function MusicianPublicProfile() {
                 </button>
               )}
             </div>
+            <p className="mt-1.5 text-center text-xs text-neutral-500 sm:text-left">
+              {profile.profileType === "VENUE" || profile.profileType === "ORGANIZER"
+                ? profile.isFollowing
+                  ? "🔔 Tu seras notifié à chaque nouvelle soirée."
+                  : "Suis ce lieu pour être notifié de ses soirées."
+                : profile.isFollowing
+                  ? "🔔 Tu seras notifié de ses prochains lives."
+                  : "Suis-le pour être notifié de ses lives."}
+            </p>
           </div>
         </div>
 
