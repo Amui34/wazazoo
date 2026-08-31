@@ -9,13 +9,13 @@ export function Logo({
   showText?: boolean;
   className?: string;
 }) {
-  const h = (size * 72) / 60;
+  const h = (size * 62) / 60;
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
       <svg
         width={size}
         height={h}
-        viewBox="0 0 60 72"
+        viewBox="0 0 60 62"
         fill="none"
         aria-hidden
         style={{ display: "block", filter: "drop-shadow(0 2px 6px rgba(224,97,242,0.3))" }}
@@ -59,17 +59,6 @@ export function Logo({
         <path d="M24.5 33 L35.5 33 L34 47 C 34 49 32.5 50 30 50 C 27.5 50 26 49 26 47 Z" fill="url(#wz-grad)" />
         {/* Interrupteur */}
         <rect x="27.8" y="38" width="4.4" height="2.6" rx="1.3" fill="#0c0912" opacity="0.55" />
-
-        {/* Câble + prise */}
-        <path
-          d="M30 50 C 30 56 39 55 40 60 C 41 64 45 63 47 61.5"
-          fill="none"
-          stroke="url(#wz-grad)"
-          strokeWidth="2.8"
-          strokeLinecap="round"
-        />
-        <rect x="45.5" y="58" width="8" height="6" rx="1.6" fill="url(#wz-grad)" />
-        <rect x="53" y="59.4" width="2.4" height="3.2" rx="1" fill="url(#wz-grad)" />
       </svg>
       {showText && (
         <span className="text-lg font-black tracking-tight text-white" style={{ letterSpacing: "-0.01em" }}>
