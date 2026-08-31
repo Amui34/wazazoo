@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 
 export type AccessTokenPayload = {
   sub: string;
-  role: "MUSICIAN" | "RECRUITER" | "ADMIN" | "TOURIST" | "ORGANIZER" | "FESTIVAL";
+  role: "MUSICIAN" | "RECRUITER" | "ADMIN" | "TOURIST" | "ORGANIZER" | "FESTIVAL" | "VENUE";
 };
 
 const ACCESS_TOKEN_TTL = "15m";

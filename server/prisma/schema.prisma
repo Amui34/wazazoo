@@ -18,6 +18,7 @@ enum UserRole {
   TOURIST // visiteur avec compte : favoris, suivi, notifications
   ORGANIZER // organisateur de soirées / club / collectif
   FESTIVAL // organisateur de festival
+  VENUE // lieu / restaurant / bar : page d'établissement + soirées
 }
 
 // Discriminator for the extensible "profile" model. V1 only ever created
@@ -29,6 +30,7 @@ enum ProfileType {
   MUSICIAN
   DJ
   ORGANIZER
+  VENUE
 }
 
 enum ProfileStatus {

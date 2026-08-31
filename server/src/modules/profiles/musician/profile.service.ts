@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.js";
 import { AppError } from "../../../lib/errors.js";
 import type { z } from "zod";
@@ -78,7 +79,9 @@ export async function getOwnProfileOrNull(userId: string) {
     where: { userId },
     include: publicProfileInclude,
   });
-  if (!profile || profile.profileType !== "MUSICIAN") return null;
+  // Les organisateurs et les lieux/restaurants éditent leur fiche via ce même
+  // endpoint (fiche contactable générique) ; les DJ ont leur propre éditeur.
+  if (!profile || profile.profileType === "DJ") return null;
   return shapePublicProfile(profile);
 }
 
@@ -109,7 +112,9 @@ export async function getOrCreateOwnProfile(userId: string) {
 async function ensureProfileRow(userId: string) {
   const existing = await prisma.profile.findUnique({ where: { userId } });
   if (existing) {
-    if (existing.profileType !== "MUSICIAN") {
+    // Les DJ ont leur propre éditeur ; musiciens, organisateurs et lieux
+    // passent par ici. On ne bloque que sur un conflit avec un profil DJ.
+    if (existing.profileType === "DJ") {
       throw new AppError(
         409,
         "profile_type_conflict",
@@ -132,29 +137,33 @@ async function ensureProfileRow(userId: string) {
 export async function updateOwnProfile(userId: string, input: z.infer<typeof updateProfileSchema>) {
   const profile = await ensureProfileRow(userId);
 
-  await prisma.profile.update({
-    where: { id: profile.id },
-    data: {
-      displayName: input.displayName,
-      bio: input.bio || null,
-      city: input.city || null,
-      mobilityRadiusKm: input.mobilityRadiusKm ?? null,
-      rateMin: input.rateMin ?? null,
-      rateMax: input.rateMax ?? null,
-      musicianProfile: {
-        update: {
-          styles: {
-            deleteMany: {},
-            create: input.styleIds.map((styleId) => ({ styleId })),
-          },
-          instruments: {
-            deleteMany: {},
-            create: input.instrumentIds.map((instrumentId) => ({ instrumentId })),
-          },
+  // Champs communs à toutes les fiches (musicien, organisateur, lieu).
+  const data: Prisma.ProfileUpdateInput = {
+    displayName: input.displayName,
+    bio: input.bio || null,
+    city: input.city || null,
+    mobilityRadiusKm: input.mobilityRadiusKm ?? null,
+    rateMin: input.rateMin ?? null,
+    rateMax: input.rateMax ?? null,
+  };
+
+  // Styles/instruments n'existent que pour les musiciens.
+  if (profile.profileType === "MUSICIAN") {
+    data.musicianProfile = {
+      update: {
+        styles: {
+          deleteMany: {},
+          create: input.styleIds.map((styleId) => ({ styleId })),
+        },
+        instruments: {
+          deleteMany: {},
+          create: input.instrumentIds.map((instrumentId) => ({ instrumentId })),
         },
       },
-    },
-  });
+    };
+  }
+
+  await prisma.profile.update({ where: { id: profile.id }, data });
 
   return getOrCreateOwnProfile(userId);
 }

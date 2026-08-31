@@ -6,7 +6,8 @@ export type UserRole =
   | "ADMIN"
   | "TOURIST"
   | "ORGANIZER"
-  | "FESTIVAL";
+  | "FESTIVAL"
+  | "VENUE";
 
 export type CurrentUser = {
   id: string;
@@ -18,7 +19,7 @@ export type CurrentUser = {
 export async function signup(input: {
   email: string;
   password: string;
-  role: "MUSICIAN" | "RECRUITER" | "TOURIST" | "ORGANIZER" | "FESTIVAL";
+  role: "MUSICIAN" | "RECRUITER" | "TOURIST" | "ORGANIZER" | "FESTIVAL" | "VENUE";
   acceptedTerms: true;
 }) {
   const { data } = await api.post<{

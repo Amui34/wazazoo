@@ -153,7 +153,7 @@ function SkeletonCard({ delay }: { delay: number }) {
 }
 
 type Filters = {
-  kind: "" | "MUSICIAN" | "GROUP" | "DJ" | "ORGANIZER";
+  kind: "" | "MUSICIAN" | "GROUP" | "DJ" | "ORGANIZER" | "VENUE";
   styleId: string;
   instrumentId: string;
   city: string;
@@ -167,7 +167,9 @@ export default function Search() {
   const [draft, setDraft] = useState<Filters>(EMPTY);
   const [applied, setApplied] = useState<Filters>(EMPTY);
 
-  const showOrganizers = applied.kind === "ORGANIZER";
+  const isVenues = applied.kind === "VENUE";
+  // Organisateurs et lieux/restaurants sont des fiches contactables (même rendu).
+  const showOrganizers = applied.kind === "ORGANIZER" || isVenues;
 
   // Une seule recherche : les organisateurs sont maintenant de vrais profils
   // (fiches contactables), renvoyés quand kind = ORGANIZER.
@@ -226,6 +228,7 @@ export default function Search() {
                 <option value="GROUP" className="bg-neutral-900">Groupes</option>
                 <option value="DJ" className="bg-neutral-900">DJ</option>
                 <option value="ORGANIZER" className="bg-neutral-900">Organisateurs</option>
+                <option value="VENUE" className="bg-neutral-900">Lieux / Restaurants</option>
               </select>
             </div>
 
@@ -236,7 +239,7 @@ export default function Search() {
               <select
                 value={draft.styleId}
                 onChange={(e) => setDraft({ ...draft, styleId: e.target.value })}
-                disabled={draft.kind === "ORGANIZER"}
+                disabled={draft.kind === "ORGANIZER" || draft.kind === "VENUE"}
                 className={`${fieldCls} mt-0.5 cursor-pointer disabled:opacity-40`}
               >
                 <option value="" className="bg-neutral-900">Tous</option>
@@ -332,8 +335,11 @@ export default function Search() {
             <>
               {!isPending && (
                 <p className="mt-6 animate-fade-in-up text-sm text-neutral-400">
-                  <span className="font-medium text-fuchsia-300">{results.length}</span> organisateur
-                  {results.length !== 1 ? "s" : ""}
+                  <span className={`font-medium ${isVenues ? "text-teal-300" : "text-fuchsia-300"}`}>
+                    {results.length}
+                  </span>{" "}
+                  {isVenues ? "lieu" : "organisateur"}
+                  {results.length !== 1 ? (isVenues ? "x" : "s") : ""}
                 </p>
               )}
               <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -344,11 +350,21 @@ export default function Search() {
                       key={o.id}
                       to={`/musiciens/${o.id}`}
                       style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
-                      className="group animate-fade-in-up rounded-2xl border border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/5 p-5 transition-all hover:-translate-y-1 hover:border-fuchsia-400/50"
+                      className={`group animate-fade-in-up rounded-2xl border p-5 transition-all hover:-translate-y-1 ${
+                        isVenues
+                          ? "border-teal-500/20 bg-gradient-to-br from-teal-500/10 to-emerald-500/5 hover:border-teal-400/50"
+                          : "border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/5 hover:border-fuchsia-400/50"
+                      }`}
                     >
-                      <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-2xl">
+                      <div
+                        className={`flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br text-2xl ${
+                          isVenues ? "from-teal-500 to-emerald-500" : "from-fuchsia-500 to-pink-500"
+                        }`}
+                      >
                         {o.coverPhotoUrl ? (
                           <img src={o.coverPhotoUrl} alt={o.displayName} className="h-full w-full object-cover" />
+                        ) : isVenues ? (
+                          "🍸"
                         ) : (
                           "🎉"
                         )}
@@ -364,8 +380,10 @@ export default function Search() {
               </div>
               {!isPending && results.length === 0 && (
                 <div className="mt-16 animate-fade-in-up text-center">
-                  <p className="text-3xl">🎉</p>
-                  <p className="mt-3 text-sm text-neutral-500">Aucun organisateur pour le moment.</p>
+                  <p className="text-3xl">{isVenues ? "🍸" : "🎉"}</p>
+                  <p className="mt-3 text-sm text-neutral-500">
+                    {isVenues ? "Aucun lieu / restaurant pour le moment." : "Aucun organisateur pour le moment."}
+                  </p>
                 </div>
               )}
             </>

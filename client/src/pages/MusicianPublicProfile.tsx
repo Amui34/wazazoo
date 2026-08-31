@@ -91,7 +91,9 @@ export default function MusicianPublicProfile() {
                 ? "DJ"
                 : profile.profileType === "ORGANIZER"
                   ? "🎉 Organisateur de soirées"
-                  : "Musicien"}{" "}
+                  : profile.profileType === "VENUE"
+                    ? "🍸 Lieu / Restaurant"
+                    : "Musicien"}{" "}
               · {profile.city}
             </p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
@@ -108,7 +110,7 @@ export default function MusicianPublicProfile() {
                   {profile.rateMin ?? "?"}–{profile.rateMax ?? "?"} € / prestation
                 </Badge>
               )}
-              {profile.ratesVisible === false && profile.profileType !== "ORGANIZER" && (
+              {profile.ratesVisible === false && profile.profileType !== "ORGANIZER" && profile.profileType !== "VENUE" && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-neutral-700 px-2.5 py-0.5 text-xs text-neutral-400">
                   💼 Tarifs réservés aux recruteurs
                 </span>
@@ -271,7 +273,7 @@ export default function MusicianPublicProfile() {
         )}
 
         <Reveal className="mt-10 rounded-md border border-neutral-800 p-5 transition-colors duration-300 hover:border-neutral-700">
-          {user && ["RECRUITER", "ORGANIZER", "FESTIVAL", "MUSICIAN"].includes(user.role) &&
+          {user && ["RECRUITER", "ORGANIZER", "FESTIVAL", "MUSICIAN", "VENUE"].includes(user.role) &&
             (sent ? (
               <p className="animate-fade-in-up text-sm text-emerald-400">
                 ✓ Ta demande a été envoyée. {profile.displayName} peut désormais accepter ou refuser.
@@ -281,9 +283,11 @@ export default function MusicianPublicProfile() {
                 <p className="text-sm text-neutral-300">
                   {profile.profileType === "ORGANIZER"
                     ? "🎉 Contacter pour organiser une soirée"
-                    : user.role === "MUSICIAN"
-                      ? "🎸 Proposer de jouer ensemble / monter un groupe"
-                      : "Envoyer une demande de contact"}
+                    : profile.profileType === "VENUE"
+                      ? "🍸 Contacter ce lieu (jouer, proposer une soirée…)"
+                      : user.role === "MUSICIAN"
+                        ? "🎸 Proposer de jouer ensemble / monter un groupe"
+                        : "Envoyer une demande de contact"}
                 </p>
                 <textarea
                   rows={3}
@@ -292,9 +296,11 @@ export default function MusicianPublicProfile() {
                   placeholder={
                     profile.profileType === "ORGANIZER"
                       ? "Ton projet de soirée, la date, le lieu, ce que tu cherches…"
-                      : user.role === "MUSICIAN"
-                        ? "Présente-toi, ton projet, ton style, ce que tu cherches…"
-                        : "Décris ton événement, la date, le lieu..."
+                      : profile.profileType === "VENUE"
+                        ? "Présente-toi, ce que tu proposes, tes dates…"
+                        : user.role === "MUSICIAN"
+                          ? "Présente-toi, ton projet, ton style, ce que tu cherches…"
+                          : "Décris ton événement, la date, le lieu..."
                   }
                   className="mt-2 w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition-colors duration-200 focus:border-neutral-400"
                 />

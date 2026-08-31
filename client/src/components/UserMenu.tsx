@@ -71,12 +71,12 @@ export function UserMenu() {
                     Mon espace
                   </Link>
                 )}
-                {["MUSICIAN", "RECRUITER", "ORGANIZER", "FESTIVAL"].includes(user.role) && (
+                {["MUSICIAN", "RECRUITER", "ORGANIZER", "FESTIVAL", "VENUE"].includes(user.role) && (
                   <Link to="/carte" onClick={() => setOpen(false)} className={`${itemCls} text-violet-300`}>
-                    ✨ {user.role === "ORGANIZER" || user.role === "FESTIVAL" ? "Créer une soirée" : "Créer un événement"}
+                    ✨ {user.role === "ORGANIZER" || user.role === "FESTIVAL" || user.role === "VENUE" ? "Créer une soirée" : "Créer un événement"}
                   </Link>
                 )}
-                {["MUSICIAN", "RECRUITER", "ORGANIZER", "FESTIVAL"].includes(user.role) && (
+                {["MUSICIAN", "RECRUITER", "ORGANIZER", "FESTIVAL", "VENUE"].includes(user.role) && (
                   <Link to="/messages" onClick={() => setOpen(false)} className={itemCls}>
                     Messages
                   </Link>

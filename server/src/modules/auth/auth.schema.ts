@@ -11,7 +11,7 @@ export const passwordSchema = z
 export const signupSchema = z.object({
   email: z.string().trim().toLowerCase().email("Email invalide."),
   password: passwordSchema,
-  role: z.enum(["MUSICIAN", "RECRUITER", "TOURIST", "ORGANIZER", "FESTIVAL"], {
+  role: z.enum(["MUSICIAN", "RECRUITER", "TOURIST", "ORGANIZER", "FESTIVAL", "VENUE"], {
     message: "Rôle invalide.",
   }),
   acceptedTerms: z.literal(true, {

@@ -7,7 +7,7 @@ export type SearchFilters = {
   budgetMax?: number;
   minCertifications?: number;
   // kind : type de profil — solo, groupe, DJ, ou organisateur.
-  kind?: "MUSICIAN" | "GROUP" | "DJ" | "ORGANIZER";
+  kind?: "MUSICIAN" | "GROUP" | "DJ" | "ORGANIZER" | "VENUE";
   // date de l'événement (ISO) : garde les artistes disponibles ce jour-là
   // (ou dont la disponibilité n'est pas renseignée).
   date?: string;
@@ -23,6 +23,8 @@ function kindWhere(kind: SearchFilters["kind"]) {
       return { profileType: "DJ" as const };
     case "ORGANIZER":
       return { profileType: "ORGANIZER" as const };
+    case "VENUE":
+      return { profileType: "VENUE" as const };
     default:
       return { profileType: { in: ["MUSICIAN", "DJ"] as const } };
   }

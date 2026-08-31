@@ -17,7 +17,7 @@ contactRequestsRouter.post(
   asyncHandler(async (req, res) => {
     // Recruteurs, organisateurs, festivals ET musiciens (pour monter un groupe)
     // peuvent envoyer une demande de contact. Les touristes ne peuvent pas.
-    const allowed = ["RECRUITER", "ORGANIZER", "FESTIVAL", "MUSICIAN"];
+    const allowed = ["RECRUITER", "ORGANIZER", "FESTIVAL", "MUSICIAN", "VENUE"];
     if (!req.userRole || !allowed.includes(req.userRole)) {
       throw new AppError(403, "forbidden", "Tu ne peux pas envoyer de demande de contact avec ce compte.");
     }

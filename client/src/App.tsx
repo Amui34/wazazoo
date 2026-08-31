@@ -33,6 +33,7 @@ export default function App() {
       <Route path="/inscription/touriste" element={<Signup role="TOURIST" />} />
       <Route path="/inscription/organisateur" element={<Signup role="ORGANIZER" />} />
       <Route path="/inscription/festival" element={<Signup role="FESTIVAL" />} />
+      <Route path="/inscription/lieu" element={<Signup role="VENUE" />} />
       <Route path="/connexion" element={<Login />} />
       <Route path="/verification-envoyee" element={<CheckEmail />} />
       <Route path="/verifier-email" element={<VerifyEmail />} />

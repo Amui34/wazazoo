@@ -4,7 +4,7 @@ import { notifyFollowers } from "../notifications/notifications.service.js";
 import type { z } from "zod";
 import type { createEventSchema } from "./events.schema.js";
 
-type Role = "MUSICIAN" | "RECRUITER" | "ADMIN" | "TOURIST" | "ORGANIZER" | "FESTIVAL";
+type Role = "MUSICIAN" | "RECRUITER" | "ADMIN" | "TOURIST" | "ORGANIZER" | "FESTIVAL" | "VENUE";
 
 export async function createEvent(
   userId: string,
@@ -53,7 +53,7 @@ export async function createEvent(
     return event;
   }
 
-  if (role === "RECRUITER" || role === "ORGANIZER" || role === "FESTIVAL") {
+  if (role === "RECRUITER" || role === "ORGANIZER" || role === "FESTIVAL" || role === "VENUE") {
     if (!input.title || input.title.trim().length < 2) {
       throw new AppError(400, "title_required", "Donne un titre à ton événement.");
     }

@@ -137,7 +137,8 @@ export default function MapPage() {
     user?.role === "MUSICIAN" ||
     user?.role === "RECRUITER" ||
     user?.role === "ORGANIZER" ||
-    user?.role === "FESTIVAL";
+    user?.role === "FESTIVAL" ||
+    user?.role === "VENUE";
   const [kindFilter, setKindFilter] = useState<"" | Category>("");
   const [zoom, setZoom] = useState(6);
   const [showTip, setShowTip] = useState(() => {
@@ -459,7 +460,7 @@ export default function MapPage() {
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder={user?.role === "RECRUITER" ? "Ex. Soirée jazz au comptoir" : "Ex. Set acoustique"}
+                  placeholder={user?.role === "RECRUITER" || user?.role === "VENUE" ? "Ex. Soirée jazz au comptoir" : "Ex. Set acoustique"}
                   className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-violet-400"
                 />
               </div>

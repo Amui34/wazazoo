@@ -32,7 +32,7 @@ type FormValues = z.infer<typeof schema>;
 export default function Signup({
   role,
 }: {
-  role: "MUSICIAN" | "RECRUITER" | "TOURIST" | "ORGANIZER" | "FESTIVAL";
+  role: "MUSICIAN" | "RECRUITER" | "TOURIST" | "ORGANIZER" | "FESTIVAL" | "VENUE";
 }) {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -51,7 +51,9 @@ export default function Signup({
           ? "Créer un compte organisateur"
           : role === "FESTIVAL"
             ? "Créer un compte festival"
-            : "Créer mon compte";
+            : role === "VENUE"
+              ? "Créer la page de mon établissement"
+              : "Créer mon compte";
   useDocumentTitle(title);
   const subtitle =
     role === "MUSICIAN"
@@ -62,7 +64,9 @@ export default function Signup({
           ? "Pour publier tes soirées sur la carte et booker des artistes."
           : role === "FESTIVAL"
             ? "Pour mettre ton festival sur la carte, dans sa propre catégorie."
-            : "Pour suivre tes artistes favoris et être notifié de leurs lives.";
+            : role === "VENUE"
+              ? "Présente ton lieu (bar, resto, salle) et publie tes soirées."
+              : "Pour suivre tes artistes favoris et être notifié de leurs lives.";
 
   async function onSubmit(values: FormValues) {
     setServerError(null);

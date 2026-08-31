@@ -16,7 +16,7 @@ searchRouter.get(
       budgetMax: budgetMax ? Number(budgetMax) : undefined,
       minCertifications: minCertifications ? Number(minCertifications) : undefined,
       kind:
-        kind === "MUSICIAN" || kind === "GROUP" || kind === "DJ" || kind === "ORGANIZER"
+        kind === "MUSICIAN" || kind === "GROUP" || kind === "DJ" || kind === "ORGANIZER" || kind === "VENUE"
           ? kind
           : undefined,
       date: typeof date === "string" && date ? date : undefined,

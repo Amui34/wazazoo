@@ -34,6 +34,13 @@ const roles = [
     accent: "from-rose-500 to-red-500",
   },
   {
+    to: "/inscription/lieu",
+    emoji: "🍸",
+    title: "Lieu / Restaurant",
+    text: "Crée la page de ton établissement et publie tes soirées : tu apparais sur la carte quand tu proposes une soirée.",
+    accent: "from-teal-500 to-emerald-500",
+  },
+  {
     to: "/inscription/touriste",
     emoji: "🧭",
     title: "Explorer & suivre",
