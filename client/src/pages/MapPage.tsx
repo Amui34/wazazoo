@@ -41,12 +41,6 @@ function ClickToPlace({ active, onPlace }: { active: boolean; onPlace: (ll: { la
   return null;
 }
 
-// Suit le niveau de zoom (les lieux n'apparaissent qu'en zoomant, façon Google).
-const LIEUX_MIN_ZOOM = 11;
-function ZoomWatch({ onZoom }: { onZoom: (z: number) => void }) {
-  const map = useMapEvents({ zoomend: () => onZoom(map.getZoom()) });
-  return null;
-}
 
 // Catégories affichées, déduites automatiquement du type d'événement + du profil :
 //  - Festival (compte FESTIVAL) → Festival
@@ -57,7 +51,10 @@ const CAT_META: Record<Category, { color: string; emoji: string; label: string }
   DJ: { color: "#22d3ee", emoji: "🎧", label: "DJ" },
   LIVE: { color: "#8b5cf6", emoji: "🎵", label: "Live" },
   FESTIVAL: { color: "#f43f5e", emoji: "🎪", label: "Festival" },
-  LIEUX: { color: "#8b8fa3", emoji: "📍", label: "Lieux" },
+  // Soirées organisées par un club / lieu / organisateur : ce sont des
+  // événements → point coloré bien visible (à ne pas confondre avec les
+  // « vrais lieux » gris et discrets du fond de carte).
+  LIEUX: { color: "#f59e0b", emoji: "🎉", label: "Soirée" },
 };
 function eventCategory(e: WazaEvent): Category {
   if (e.kind === "FESTIVAL") return "FESTIVAL";
@@ -67,17 +64,6 @@ function eventCategory(e: WazaEvent): Category {
 }
 
 function pin(cat: Category | "NEW") {
-  // Lieux : point discret façon Google (petit, gris, sans emoji) — les horaires
-  // et le détail sont dans la popup / l'agenda.
-  if (cat === "LIEUX") {
-    return L.divIcon({
-      className: "",
-      html: `<div style="width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#8b8fa3;border:2px solid #dfe1e8;box-shadow:0 1px 4px rgba(0,0,0,.35);opacity:.92"></div>`,
-      iconSize: [16, 16],
-      iconAnchor: [8, 16],
-      popupAnchor: [0, -15],
-    });
-  }
   const bg = cat === "NEW" ? "#22c55e" : CAT_META[cat].color;
   const emoji = cat === "NEW" ? "📍" : CAT_META[cat].emoji;
   return L.divIcon({
@@ -400,6 +386,7 @@ export default function MapPage() {
     { key: "DJ", label: "🎧 DJ" },
     { key: "LIVE", label: "🎵 Live" },
     { key: "FESTIVAL", label: "🎪 Festival" },
+    { key: "LIEUX", label: "🎉 Soirée" },
   ];
 
   return (
@@ -455,6 +442,24 @@ export default function MapPage() {
                 </button>
               );
             })}
+          </div>
+
+          {/* Légende : lever la confusion entre soirées (événements) et lieux réels */}
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-400">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-full" style={{ background: "#f59e0b" }} />
+              Soirées &amp; concerts (ce soir / à venir)
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-neutral-500 bg-white/80 text-[8px]">
+                🍸
+              </span>
+              Vrais lieux (bars, restos…) — en zoomant
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-3.5 w-3.5 rounded-full border-2" style={{ borderColor: "#7c5cf0", background: "#fff" }} />
+              Géré par l'établissement
+            </span>
           </div>
         </div>
 
@@ -614,7 +619,6 @@ export default function MapPage() {
               <FitBounds points={points} />
               <FlyTo target={flyTarget} />
               <ClickToPlace active={panelOpen} onPlace={(ll) => setNewLoc(ll)} />
-              <ZoomWatch onZoom={setZoom} />
               <BoundsWatch
                 onChange={(z, b) => {
                   setZoom(z);
@@ -622,9 +626,7 @@ export default function MapPage() {
                 }}
               />
               <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {visibleEvents
-                .filter((e) => eventCategory(e) !== "LIEUX" || zoom >= LIEUX_MIN_ZOOM)
-                .map((e) => (
+              {visibleEvents.map((e) => (
                 <Marker key={e.id} position={[e.lat, e.lng]} icon={pin(eventCategory(e))}>
                   <Popup>
                     <div style={{ minWidth: 170 }}>
