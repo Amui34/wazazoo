@@ -29,10 +29,11 @@ export type Availability = {
 
 export type MusicianProfile = {
   id: string;
-  profileType: "MUSICIAN" | "DJ" | "ORGANIZER";
+  profileType: "MUSICIAN" | "DJ" | "ORGANIZER" | "VENUE";
   displayName: string;
   bio: string | null;
   city: string | null;
+  openingHours?: string | null;
   mobilityRadiusKm: number | null;
   rateMin: number | null;
   rateMax: number | null;
@@ -61,6 +62,7 @@ export async function updateMyProfile(input: {
   displayName: string;
   bio: string;
   city: string;
+  openingHours?: string;
   mobilityRadiusKm: number | null;
   rateMin: number | null;
   rateMax: number | null;

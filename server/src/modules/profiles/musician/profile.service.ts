@@ -42,6 +42,7 @@ function shapePublicProfile(profile: NonNullable<Awaited<ReturnType<typeof findP
     rateMin: profile.rateMin,
     rateMax: profile.rateMax,
     rateCurrency: profile.rateCurrency,
+    openingHours: profile.openingHours,
     status: profile.status,
     viewsCount: profile.viewsCount,
     styles:
@@ -142,6 +143,7 @@ export async function updateOwnProfile(userId: string, input: z.infer<typeof upd
     displayName: input.displayName,
     bio: input.bio || null,
     city: input.city || null,
+    openingHours: input.openingHours || null,
     mobilityRadiusKm: input.mobilityRadiusKm ?? null,
     rateMin: input.rateMin ?? null,
     rateMax: input.rateMax ?? null,

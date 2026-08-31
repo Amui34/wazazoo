@@ -164,6 +164,14 @@ export default function MusicianPublicProfile() {
           </Reveal>
         )}
 
+        {profile.profileType === "VENUE" && profile.openingHours && (
+          <Reveal delay={130}>
+            <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-sm text-neutral-300">
+              🕒 {profile.openingHours}
+            </p>
+          </Reveal>
+        )}
+
         {/* Visiteur non connecté : aperçu limité + invitation à débloquer le reste. */}
         {!user && (
           <Reveal

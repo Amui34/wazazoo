@@ -71,6 +71,11 @@ export function UserMenu() {
                     Mon espace
                   </Link>
                 )}
+                {(user.role === "VENUE" || user.role === "ORGANIZER") && (
+                  <Link to="/ma-fiche" onClick={() => setOpen(false)} className={itemCls}>
+                    {user.role === "VENUE" ? "🍸 Ma page établissement" : "🎉 Ma page organisateur"}
+                  </Link>
+                )}
                 {["MUSICIAN", "RECRUITER", "ORGANIZER", "FESTIVAL", "VENUE"].includes(user.role) && (
                   <Link to="/carte" onClick={() => setOpen(false)} className={`${itemCls} text-violet-300`}>
                     ✨ {user.role === "ORGANIZER" || user.role === "FESTIVAL" || user.role === "VENUE" ? "Créer une soirée" : "Créer un événement"}

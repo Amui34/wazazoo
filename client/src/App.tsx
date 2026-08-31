@@ -7,6 +7,7 @@ import CheckEmail from "./pages/CheckEmail.js";
 import VerifyEmail from "./pages/VerifyEmail.js";
 import ProfileEditor from "./pages/ProfileEditor.js";
 import DjProfileEditor from "./pages/DjProfileEditor.js";
+import EstablishmentEditor from "./pages/EstablishmentEditor.js";
 import MusicianPublicProfile from "./pages/MusicianPublicProfile.js";
 import Search from "./pages/Search.js";
 import Dashboard from "./pages/Dashboard.js";
@@ -52,6 +53,14 @@ export default function App() {
         element={
           <RequireAuth>
             <DjProfileEditor />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/ma-fiche"
+        element={
+          <RequireAuth>
+            <EstablishmentEditor />
           </RequireAuth>
         }
       />

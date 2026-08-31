@@ -191,6 +191,7 @@ model Profile {
   rateMin          Int?
   rateMax          Int?
   rateCurrency     String        @default("EUR")
+  openingHours     String? // horaires d'ouverture (lieu / restaurant), texte libre
   status           ProfileStatus @default(DRAFT)
   viewsCount       Int           @default(0) // vues publiques (anonyme)
   createdAt        DateTime      @default(now())
