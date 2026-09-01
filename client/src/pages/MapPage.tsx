@@ -605,6 +605,10 @@ export default function MapPage() {
           <div className="overflow-hidden rounded-2xl border border-neutral-800" style={{ height: "68vh" }}>
             {/* Zoom relooké « ampli » : + = monter (violet), simple et arrondi */}
             <style>{`
+              /* Fond de carte sombre (thème nuit) : OSM assombri par filtre CSS,
+                 sans fournisseur à clé. Les marqueurs (autre calque) restent intacts. */
+              .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.75); }
+              .leaflet-container { background: #0a0a0a; }
               .leaflet-control-zoom { border: none !important; border-radius: 16px !important; overflow: hidden;
                 box-shadow: 0 6px 18px rgba(0,0,0,.55); margin: 14px !important; }
               .leaflet-control-zoom a { width: 42px !important; height: 42px !important; line-height: 42px !important;
