@@ -38,15 +38,17 @@ Comptes gratuits à créer aussi :
    (Générer un secret : `openssl rand -hex 32`.)
    *Photos (optionnel) : les variables `S3_*` ne sont pas requises pour le test ;
    sans elles, l'upload de photos est simplement indisponible.*
-4. **Build & start** — commande de démarrage du service :
+4. **Build & start** — un **`Dockerfile` est fourni dans `server/`** : Railway le
+   détecte et construit tout seul (`npm ci` → `prisma generate` → `npm run build`).
+   Au démarrage, il fait `prisma db push` (sync du schéma) puis lance l'API compilée.
+   Rien à configurer côté commande.
+5. **Seed** (une fois, après le 1er déploiement) — depuis Railway :
    ```
-   npx prisma db push && npx tsx prisma/seed.ts && node dist/server.js
+   railway run npx tsx prisma/seed.ts            # comptes + événements de démo
+   railway run npx tsx prisma/seed-venues-osm.ts  # ~1340 vrais lieux (OSM)
    ```
-   avec build `npm ci && npx prisma generate && npm run build`.
-   *(Alternative sans build : start = `npx prisma db push && npx tsx src/server.ts`.)*
-   Le `seed.ts` peuple les artistes de démo ; lancer aussi
-   `npx tsx prisma/seed-venues-osm.ts` une fois (vrais lieux de Montpellier).
-5. Récupérer l'**URL HTTPS publique** du service (ex. `https://waza-server.up.railway.app`).
+   *(ou en local en exportant `DATABASE_URL=<url publique Railway>` avant ces commandes.)*
+6. Récupérer l'**URL HTTPS publique** du service (ex. `https://waza-server.up.railway.app`).
    La tester : `https://…/api/events/active` doit répondre du JSON.
 
 > ⚠️ iOS exige **HTTPS** — Railway/Render en fournissent un d'office. Ne pas utiliser d'URL http://.
