@@ -24,6 +24,7 @@ export async function signup(input: {
 }) {
   const { data } = await api.post<{
     user: { id: string; email: string; role: UserRole };
+    autoVerified?: boolean;
   }>("/api/auth/signup", input);
   return data;
 }

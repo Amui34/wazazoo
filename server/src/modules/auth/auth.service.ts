@@ -36,11 +36,17 @@ export async function signup(input: z.infer<typeof signupSchema>, ipAddress: str
 
   const passwordHash = await bcrypt.hash(input.password, 12);
 
+  // Mode test (phase de bêta) : on valide les comptes automatiquement pour
+  // éviter d'avoir à configurer l'envoi d'emails. À DÉSACTIVER avant l'ouverture
+  // au public (retirer AUTH_AUTO_VERIFY) pour rétablir la vérification par email.
+  const autoVerify = process.env.AUTH_AUTO_VERIFY === "true";
+
   const user = await prisma.user.create({
     data: {
       email: input.email,
       passwordHash,
       role: input.role,
+      ...(autoVerify ? { emailVerifiedAt: new Date() } : {}),
       consents: {
         create: {
           type: "TERMS",
@@ -68,19 +74,22 @@ export async function signup(input: z.infer<typeof signupSchema>, ipAddress: str
     });
   }
 
-  const token = generateToken();
-  await prisma.emailVerificationToken.create({
-    data: {
-      userId: user.id,
-      token,
-      expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),
-    },
-  });
-
-  await sendVerificationEmail(user.email, token);
+  // En mode test auto-validé, on n'envoie pas d'email de vérification.
+  if (!autoVerify) {
+    const token = generateToken();
+    await prisma.emailVerificationToken.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),
+      },
+    });
+    await sendVerificationEmail(user.email, token);
+  }
 
   return {
     user: { id: user.id, email: user.email, role: user.role },
+    autoVerified: autoVerify,
   };
 }
 

@@ -77,7 +77,12 @@ export default function Signup({
         role,
         acceptedTerms: true,
       });
-      navigate("/verification-envoyee", { state: { email: result.user.email } });
+      if (result.autoVerified) {
+        // Mode test : compte validé d'emblée, on va directement à la connexion.
+        navigate("/connexion", { state: { justCreated: result.user.email } });
+      } else {
+        navigate("/verification-envoyee", { state: { email: result.user.email } });
+      }
     } catch (err) {
       if (getApiErrorCode(err) === "email_taken") {
         setServerError("Un compte existe déjà avec cet email.");
