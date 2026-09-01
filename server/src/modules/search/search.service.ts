@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 
 export type SearchFilters = {
@@ -13,20 +14,20 @@ export type SearchFilters = {
   date?: string;
 };
 
-function kindWhere(kind: SearchFilters["kind"]) {
+function kindWhere(kind: SearchFilters["kind"]): Prisma.ProfileWhereInput {
   switch (kind) {
     case "MUSICIAN":
-      return { profileType: "MUSICIAN" as const, isGroup: false };
+      return { profileType: "MUSICIAN", isGroup: false };
     case "GROUP":
       return { isGroup: true };
     case "DJ":
-      return { profileType: "DJ" as const };
+      return { profileType: "DJ" };
     case "ORGANIZER":
-      return { profileType: "ORGANIZER" as const };
+      return { profileType: "ORGANIZER" };
     case "VENUE":
-      return { profileType: "VENUE" as const };
+      return { profileType: "VENUE" };
     default:
-      return { profileType: { in: ["MUSICIAN", "DJ"] as const } };
+      return { profileType: { in: ["MUSICIAN", "DJ"] } };
   }
 }
 
