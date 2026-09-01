@@ -35,6 +35,7 @@ function shapePublicProfile(profile: NonNullable<Awaited<ReturnType<typeof findP
   return {
     id: profile.id,
     profileType: profile.profileType,
+    isGroup: profile.isGroup,
     displayName: profile.displayName,
     bio: profile.bio,
     city: profile.city,
