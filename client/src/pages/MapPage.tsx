@@ -47,14 +47,16 @@ function ClickToPlace({ active, onPlace }: { active: boolean; onPlace: (ll: { la
 //  - Lieu / organisateur (VENUE, ORGANIZER) → Lieux
 //  - Artiste DJ → DJ ; artiste musicien/groupe → Live
 type Category = "DJ" | "LIVE" | "FESTIVAL" | "LIEUX";
+// Couleurs alignées sur la palette de marque (yeux du logo : turquoise & jaune,
+// tête rose) — accents pop sur le thème sombre.
 const CAT_META: Record<Category, { color: string; emoji: string; label: string }> = {
-  DJ: { color: "#22d3ee", emoji: "🎧", label: "DJ" },
+  DJ: { color: "#21D0C3", emoji: "🎧", label: "DJ" },
   LIVE: { color: "#8b5cf6", emoji: "🎵", label: "Live" },
-  FESTIVAL: { color: "#f43f5e", emoji: "🎪", label: "Festival" },
+  FESTIVAL: { color: "#FF3D82", emoji: "🎪", label: "Festival" },
   // Soirées organisées par un club / lieu / organisateur : ce sont des
   // événements → point coloré bien visible (à ne pas confondre avec les
   // « vrais lieux » gris et discrets du fond de carte).
-  LIEUX: { color: "#f59e0b", emoji: "🎉", label: "Soirée" },
+  LIEUX: { color: "#FFCE2E", emoji: "🎉", label: "Soirée" },
 };
 function eventCategory(e: WazaEvent): Category {
   if (e.kind === "FESTIVAL") return "FESTIVAL";
@@ -447,7 +449,7 @@ export default function MapPage() {
           {/* Légende : lever la confusion entre soirées (événements) et lieux réels */}
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-400">
             <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-3 w-3 rounded-full" style={{ background: "#f59e0b" }} />
+              <span className="inline-block h-3 w-3 rounded-full" style={{ background: "#FFCE2E" }} />
               Soirées &amp; concerts (ce soir / à venir)
             </span>
             <span className="inline-flex items-center gap-1.5">
