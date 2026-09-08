@@ -1,5 +1,5 @@
-// Logo WAZAZOO : un micro détaillé (tête en maille, corps, câble + prise) dans
-// un pin de carte en contour, aux couleurs de marque. `showText` = mark + wordmark.
+// Logo WAZAZOO : la mascotte « tête à deux vinyles » (piste 8b) — tête rose,
+// yeux vinyles jaune & turquoise, sourire — + wordmark. `showText` = mark + wordmark.
 export function Logo({
   size = 30,
   showText = true,
@@ -9,56 +9,32 @@ export function Logo({
   showText?: boolean;
   className?: string;
 }) {
-  const h = (size * 62) / 60;
+  const h = (size * 72) / 76;
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
       <svg
         width={size}
         height={h}
-        viewBox="0 0 60 62"
+        viewBox="0 0 76 72"
         fill="none"
         aria-hidden
-        style={{ display: "block", filter: "drop-shadow(0 2px 6px rgba(224,97,242,0.3))" }}
+        style={{ display: "block", filter: "drop-shadow(0 2px 6px rgba(255,61,130,0.28))" }}
       >
-        <defs>
-          <linearGradient id="wz-grad" x1="8" y1="4" x2="52" y2="64" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#f6b23e" />
-            <stop offset="0.5" stopColor="#e061f2" />
-            <stop offset="1" stopColor="#9b7bff" />
-          </linearGradient>
-          <pattern id="wz-mesh" patternUnits="userSpaceOnUse" width="4.4" height="4.4">
-            <path d="M0 0 L4.4 4.4 M4.4 0 L0 4.4" stroke="#0c0912" strokeWidth="0.7" opacity="0.55" />
-          </pattern>
-          <clipPath id="wz-head">
-            <ellipse cx="30" cy="21" rx="11.5" ry="13.5" />
-          </clipPath>
-        </defs>
-
-        {/* Pin de carte, en contour */}
-        <path
-          d="M30 3.5 C 42 3.5 51 12.5 51 24 C 51 33 44 39 37 50 L 30 59 L 23 50 C 16 39 9 33 9 24 C 9 12.5 18 3.5 30 3.5 Z"
-          fill="none"
-          stroke="url(#wz-grad)"
-          strokeWidth="4.5"
-          strokeLinejoin="round"
-        />
-
-        {/* Tête du micro + maille */}
-        <ellipse cx="30" cy="21" rx="11.5" ry="13.5" fill="url(#wz-grad)" />
-        <g clipPath="url(#wz-head)">
-          <rect x="18" y="7" width="24" height="28" fill="url(#wz-mesh)" />
-          {/* bandes de grille */}
-          <g stroke="#0c0912" strokeWidth="1.1" opacity="0.5">
-            <line x1="18" y1="16" x2="42" y2="16" />
-            <line x1="18" y1="21" x2="42" y2="21" />
-            <line x1="18" y1="26" x2="42" y2="26" />
-          </g>
-        </g>
-
-        {/* Col + corps du micro */}
-        <path d="M24.5 33 L35.5 33 L34 47 C 34 49 32.5 50 30 50 C 27.5 50 26 49 26 47 Z" fill="url(#wz-grad)" />
-        {/* Interrupteur */}
-        <rect x="27.8" y="38" width="4.4" height="2.6" rx="1.3" fill="#0c0912" opacity="0.55" />
+        <rect x="2" y="6" width="72" height="60" rx="18" fill="#FF3D82" stroke="#2A1240" strokeWidth="3" />
+        {/* œil vinyle gauche */}
+        <circle cx="24" cy="30" r="13.5" fill="#2A1240" />
+        <circle cx="24" cy="30" r="10" fill="none" stroke="#FFF3E2" strokeWidth="0.9" opacity="0.3" />
+        <circle cx="24" cy="30" r="5.4" fill="#FFCE2E" />
+        <circle cx="24" cy="30" r="2.2" fill="#2A1240" />
+        <circle cx="20.6" cy="26.6" r="1.8" fill="#FFF3E2" />
+        {/* œil vinyle droit */}
+        <circle cx="52" cy="30" r="13.5" fill="#2A1240" />
+        <circle cx="52" cy="30" r="10" fill="none" stroke="#FFF3E2" strokeWidth="0.9" opacity="0.3" />
+        <circle cx="52" cy="30" r="5.4" fill="#21D0C3" />
+        <circle cx="52" cy="30" r="2.2" fill="#2A1240" />
+        <circle cx="48.6" cy="26.6" r="1.8" fill="#FFF3E2" />
+        {/* sourire */}
+        <path d="M28 51 q10 9 20 1" stroke="#2A1240" strokeWidth="4" strokeLinecap="round" fill="none" />
       </svg>
       {showText && (
         <span className="text-lg font-black tracking-tight text-white" style={{ letterSpacing: "-0.01em" }}>
