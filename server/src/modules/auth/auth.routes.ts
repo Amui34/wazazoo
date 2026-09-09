@@ -139,3 +139,15 @@ authRouter.get(
     });
   })
 );
+
+// Suppression définitive du compte (RGPD + exigence App Store). Efface toutes
+// les données liées puis déconnecte (cookies effacés).
+authRouter.delete(
+  "/me",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    await authService.deleteAccount(req.userId!);
+    clearAuthCookies(res);
+    res.status(200).json({ deleted: true });
+  })
+);

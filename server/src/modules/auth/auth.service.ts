@@ -156,3 +156,14 @@ export async function validateCredentials(input: z.infer<typeof loginSchema>) {
 export async function getUserById(id: string) {
   return prisma.user.findUnique({ where: { id } });
 }
+
+// Suppression définitive du compte + de toutes les données liées (RGPD + exigence
+// Apple). Les relations User→données sont en onDelete: Cascade dans le schéma,
+// donc un delete de l'utilisateur efface profil, soirées, favoris, notifications…
+export async function deleteAccount(userId: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new AppError(404, "user_not_found", "Compte introuvable.");
+  }
+  await prisma.user.delete({ where: { id: userId } });
+}
