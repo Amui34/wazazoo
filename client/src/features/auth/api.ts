@@ -41,6 +41,12 @@ export async function logout() {
   await api.post("/api/auth/logout");
 }
 
+// Suppression définitive du compte (RGPD). Efface l'utilisateur et, par cascade,
+// toutes ses données côté serveur, puis la session est effacée.
+export async function deleteAccount() {
+  await api.delete("/api/auth/me");
+}
+
 export async function verifyEmail(token: string) {
   await api.post("/api/auth/verify-email", { token });
 }

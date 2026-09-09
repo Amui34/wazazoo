@@ -6,6 +6,7 @@ import { Badge } from "../components/Badge.js";
 import { AmbientLights } from "../components/AmbientLights.js";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { useAuth } from "../features/auth/AuthContext.js";
+import { deleteAccount } from "../features/auth/api.js";
 import { getMyProfile } from "../features/profile/api.js";
 import { getMyDjProfile } from "../features/dj/api.js";
 import {
@@ -344,6 +345,34 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Zone de danger : suppression de compte (RGPD) */}
+        <section className="mt-10 rounded-xl border border-red-500/30 bg-red-500/[0.04] p-5">
+          <h2 className="text-sm font-semibold text-red-300">Zone de danger</h2>
+          <p className="mt-1 text-sm text-neutral-400">
+            Supprimer ton compte est définitif : ton profil, tes soirées, tes favoris et toutes tes
+            données seront effacés.
+          </p>
+          <button
+            onClick={async () => {
+              if (
+                !window.confirm(
+                  "Supprimer définitivement ton compte et toutes tes données ? Cette action est irréversible."
+                )
+              )
+                return;
+              try {
+                await deleteAccount();
+                window.location.href = "/";
+              } catch {
+                alert("La suppression a échoué. Réessaie dans un instant.");
+              }
+            }}
+            className="mt-3 rounded-md border border-red-500/50 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/10"
+          >
+            Supprimer mon compte
+          </button>
         </section>
       </div>
       </div>
