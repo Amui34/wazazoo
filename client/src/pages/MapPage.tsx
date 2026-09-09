@@ -64,15 +64,32 @@ function eventCategory(e: WazaEvent): Category {
   return "LIVE";
 }
 
+// Glyphe blanc au trait selon la catégorie (dans la DA du pin rose + note).
+function catGlyph(cat: Category | "NEW"): string {
+  if (cat === "NEW") return `<circle cx="20" cy="20" r="4.5" fill="#fff"/>`;
+  if (cat === "DJ")
+    return `<path d="M11 21 a9 9 0 0 1 18 0" fill="none" stroke="#fff" stroke-width="2.6"/><rect x="8.5" y="20" width="5" height="9" rx="2.3" fill="#fff"/><rect x="26.5" y="20" width="5" height="9" rx="2.3" fill="#fff"/>`;
+  if (cat === "FESTIVAL")
+    return `<path d="M20 10 l2.5 5.8 6.4 .5 -4.9 4.2 1.6 6.2 -5.6 -3.4 -5.6 3.4 1.6 -6.2 -4.9 -4.2 6.4 -.5 Z" fill="#fff"/>`;
+  if (cat === "LIEUX")
+    return `<path d="M20 10 q1.8 6.4 8.4 8.4 q-6.6 2 -8.4 8.4 q-1.8 -6.4 -8.4 -8.4 q6.6 -2 8.4 -8.4 Z" fill="#fff"/>`;
+  // LIVE : note de musique (comme le logo)
+  return `<g fill="#fff"><ellipse cx="16.5" cy="24" rx="4.2" ry="3.4" transform="rotate(-18 16.5 24)"/><rect x="19.7" y="11" width="2.2" height="13" rx="1.1"/><path d="M19.7 11 q6.5 1 6.5 5.2 q-3.2 -2.8 -6.5 -1.9 Z"/></g>`;
+}
+
 function pin(cat: Category | "NEW") {
   const bg = cat === "NEW" ? "#22c55e" : CAT_META[cat].color;
-  const emoji = cat === "NEW" ? "📍" : CAT_META[cat].emoji;
+  const svg =
+    `<svg width="40" height="52" viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 6px rgba(0,0,0,.55))">` +
+    `<path d="M20 2 C 30.5 2 39 10.5 39 21 C 39 33 26 39 20 50 C 14 39 1 33 1 21 C 1 10.5 9.5 2 20 2 Z" fill="${bg}" stroke="#fff" stroke-width="2.5"/>` +
+    catGlyph(cat) +
+    `</svg>`;
   return L.divIcon({
     className: "",
-    html: `<div style="width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${bg};border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);font-size:16px">${emoji}</span></div>`,
-    iconSize: [36, 36],
-    iconAnchor: [18, 36],
-    popupAnchor: [0, -34],
+    html: svg,
+    iconSize: [40, 52],
+    iconAnchor: [20, 50],
+    popupAnchor: [0, -46],
   });
 }
 
