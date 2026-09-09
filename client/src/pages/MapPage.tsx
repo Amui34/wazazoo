@@ -214,21 +214,6 @@ export default function MapPage() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("");
   const [zoom, setZoom] = useState(6);
   const [bbox, setBbox] = useState<Bbox | null>(null);
-  const [showTip, setShowTip] = useState(() => {
-    try {
-      return localStorage.getItem("wazazoo_map_tip_dismissed") !== "1";
-    } catch {
-      return true;
-    }
-  });
-  function dismissTip() {
-    setShowTip(false);
-    try {
-      localStorage.setItem("wazazoo_map_tip_dismissed", "1");
-    } catch {
-      // localStorage indisponible : on ignore, l'astuce réapparaîtra.
-    }
-  }
 
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
   const [search, setSearch] = useState("");
@@ -433,21 +418,21 @@ export default function MapPage() {
     <div className="min-h-screen bg-neutral-950 text-white">
       <Navbar />
       <div className="mx-auto max-w-6xl px-6 py-8">
-        {/* Hero fun */}
-        <div className="mb-5">
-          <h1 className="text-3xl font-black sm:text-4xl">
+        {/* En-tête compact : titre + filtres sur peu de lignes */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-black sm:text-3xl">
             <span className="bg-gradient-to-r from-amber-300 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent">
               Qu'est-ce qui se passe près de toi&nbsp;?
             </span>{" "}
             🎉
           </h1>
-          <p className="mt-2 text-sm text-neutral-400">
+          <p className="mt-1 text-sm text-neutral-400">
             <span className="font-semibold text-red-400">● {nowCount} en ce moment</span> ·{" "}
-            {visibleEvents.length} événement{visibleEvents.length !== 1 ? "s" : ""} à l'affiche — DJ, live &amp; festivals. Zoome pour voir les vrais lieux du quartier.
+            {visibleEvents.length} à l'affiche
           </p>
 
-          {/* Filtre TEMPS RÉEL — la question centrale : c'est quand ? */}
-          <div className="mt-4 flex flex-wrap gap-2">
+          {/* Filtres sur une seule ligne : QUAND (primaire) puis TYPE */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             {TIME_FILTERS.map((f) => {
               const active = timeFilter === f.key;
               return (
@@ -464,28 +449,7 @@ export default function MapPage() {
                 </button>
               );
             })}
-          </div>
-
-          {showTip && (
-            <div className="mt-3 flex items-start gap-3 rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-2.5 text-sm text-violet-100">
-              <span>💡</span>
-              <p className="flex-1">
-                Filtre par <strong>DJ · Live · Festival</strong>, cherche <strong>ta ville</strong> ou clique{" "}
-                <strong>« Autour de moi »</strong>, puis touche un point pour voir le détail. Zoome pour
-                voir les <strong>vrais lieux</strong> du quartier (bars, restos…).
-              </p>
-              <button
-                onClick={dismissTip}
-                aria-label="Fermer l'astuce"
-                className="shrink-0 text-violet-300 transition-colors hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
-          {/* Filtre par type */}
-          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="mx-1 hidden h-5 w-px bg-neutral-700 sm:inline-block" />
             {KIND_FILTERS.map((f) => {
               const active = kindFilter === f.key;
               return (
@@ -502,24 +466,6 @@ export default function MapPage() {
                 </button>
               );
             })}
-          </div>
-
-          {/* Légende : lever la confusion entre soirées (événements) et lieux réels */}
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-400">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-3 w-3 rounded-full" style={{ background: "#FFCE2E" }} />
-              Soirées &amp; concerts (ce soir / à venir)
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-neutral-500 bg-white/80 text-[8px]">
-                🍸
-              </span>
-              Vrais lieux (bars, restos…) — en zoomant
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-3.5 w-3.5 rounded-full border-2" style={{ borderColor: "#7c5cf0", background: "#fff" }} />
-              Géré par l'établissement
-            </span>
           </div>
         </div>
 
