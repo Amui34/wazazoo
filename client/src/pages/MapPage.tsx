@@ -149,6 +149,38 @@ function whenLabel(startsAt: string, endsAt: string) {
   return { text: "terminé", live: false };
 }
 
+// Filtre temps réel — le cœur du « qu'est-ce que je fais MAINTENANT autour de moi ».
+type TimeFilter = "" | "now" | "tonight" | "weekend";
+function matchesTimeFilter(startsAt: string, endsAt: string, tf: TimeFilter): boolean {
+  if (!tf) return true;
+  const now = Date.now();
+  const s = new Date(startsAt).getTime();
+  const e = new Date(endsAt).getTime();
+  if (e <= now) return false; // déjà terminé
+  if (tf === "now") return s <= now;
+  if (tf === "tonight") {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    return s <= end.getTime();
+  }
+  // week-end : samedi 00:00 → dimanche 23:59 (celui en cours si on y est déjà).
+  const d = new Date();
+  const day = d.getDay(); // 0 dim … 6 sam
+  const sat = new Date(d);
+  sat.setDate(d.getDate() + (day === 0 ? -1 : 6 - day));
+  sat.setHours(0, 0, 0, 0);
+  const sun = new Date(sat);
+  sun.setDate(sat.getDate() + 1);
+  sun.setHours(23, 59, 59, 999);
+  return s <= sun.getTime() && e > sat.getTime();
+}
+const TIME_FILTERS: { key: TimeFilter; label: string }[] = [
+  { key: "now", label: "🔴 Maintenant" },
+  { key: "tonight", label: "🌙 Ce soir" },
+  { key: "weekend", label: "🎉 Ce week-end" },
+  { key: "", label: "Tout" },
+];
+
 function defaultDateTimes() {
   const now = new Date();
   const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
@@ -179,6 +211,7 @@ export default function MapPage() {
     user?.role === "FESTIVAL" ||
     user?.role === "VENUE";
   const [kindFilter, setKindFilter] = useState<"" | Category>("");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("");
   const [zoom, setZoom] = useState(6);
   const [bbox, setBbox] = useState<Bbox | null>(null);
   const [showTip, setShowTip] = useState(() => {
@@ -240,8 +273,13 @@ export default function MapPage() {
   });
 
   const visibleEvents = useMemo(
-    () => (kindFilter ? events.filter((e) => eventCategory(e) === kindFilter) : events),
-    [events, kindFilter]
+    () =>
+      events.filter(
+        (e) =>
+          (!kindFilter || eventCategory(e) === kindFilter) &&
+          matchesTimeFilter(e.startsAt, e.endsAt, timeFilter)
+      ),
+    [events, kindFilter, timeFilter]
   );
   const sorted = useMemo(
     () =>
@@ -407,6 +445,26 @@ export default function MapPage() {
             <span className="font-semibold text-red-400">● {nowCount} en ce moment</span> ·{" "}
             {visibleEvents.length} événement{visibleEvents.length !== 1 ? "s" : ""} à l'affiche — DJ, live &amp; festivals. Zoome pour voir les vrais lieux du quartier.
           </p>
+
+          {/* Filtre TEMPS RÉEL — la question centrale : c'est quand ? */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {TIME_FILTERS.map((f) => {
+              const active = timeFilter === f.key;
+              return (
+                <button
+                  key={f.key || "all-time"}
+                  onClick={() => setTimeFilter(f.key)}
+                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
+                    active
+                      ? "bg-white text-neutral-950 shadow-lg shadow-white/10"
+                      : "border border-neutral-700 text-neutral-200 hover:border-neutral-400"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
 
           {showTip && (
             <div className="mt-3 flex items-start gap-3 rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-2.5 text-sm text-violet-100">
@@ -754,9 +812,21 @@ export default function MapPage() {
                       className="flex gap-3 border-b border-neutral-800/60 px-4 py-3 hover:bg-neutral-800/40"
                       style={{ borderLeft: `3px solid ${accent}` }}
                     >
-                      <div className="w-12 shrink-0 text-center">
+                      <div className="w-11 shrink-0 text-center">
                         <div className="text-sm font-bold tabular-nums">{timeStr(e.startsAt)}</div>
                         <div className="text-[10px] text-neutral-500">{timeStr(e.endsAt)}</div>
+                      </div>
+                      <div
+                        className="h-11 w-11 shrink-0 overflow-hidden rounded-lg"
+                        style={{ background: accent + "22" }}
+                      >
+                        {e.coverPhotoUrl ? (
+                          <img src={e.coverPhotoUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-lg">
+                            {CAT_META[eventCategory(e)].emoji}
+                          </div>
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">
