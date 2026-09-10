@@ -157,6 +157,50 @@ export async function getUserById(id: string) {
   return prisma.user.findUnique({ where: { id } });
 }
 
+const RESET_TTL_MS = 1000 * 60 * 60; // 1 heure
+
+// Demande de réinitialisation : on ne révèle jamais si l'email existe. Si l'envoi
+// d'email échoue (SMTP indisponible), on n'échoue pas la requête pour autant.
+export async function requestPasswordReset(email: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return;
+  const token = generateToken();
+  await prisma.passwordResetToken.create({
+    data: { userId: user.id, token, expiresAt: new Date(Date.now() + RESET_TTL_MS) },
+  });
+  const base = process.env.CLIENT_URL ?? "http://localhost:5173";
+  const link = `${base}/reinitialiser?token=${token}`;
+  try {
+    await sendMail({
+      to: user.email,
+      subject: "Réinitialise ton mot de passe WAZAZOO",
+      html:
+        `<p>Tu as demandé à réinitialiser ton mot de passe WAZAZOO.</p>` +
+        `<p><a href="${link}">Choisir un nouveau mot de passe</a></p>` +
+        `<p>Ce lien expire dans 1 heure. Si tu n'es pas à l'origine de cette demande, ignore cet email.</p>`,
+    });
+  } catch {
+    // SMTP indisponible : la demande reste "réussie" côté utilisateur.
+  }
+}
+
+// Réinitialisation effective : token valide, non utilisé, non expiré.
+export async function resetPassword(token: string, newPassword: string) {
+  const record = await prisma.passwordResetToken.findUnique({ where: { token } });
+  if (!record || record.usedAt || record.expiresAt < new Date()) {
+    throw new AppError(400, "invalid_token", "Lien invalide ou expiré. Refais une demande.");
+  }
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: record.userId }, data: { passwordHash } }),
+    // invalide ce token et tous les autres encore actifs de cet utilisateur
+    prisma.passwordResetToken.updateMany({
+      where: { userId: record.userId, usedAt: null },
+      data: { usedAt: new Date() },
+    }),
+  ]);
+}
+
 // Suppression définitive du compte + de toutes les données liées (RGPD + exigence
 // Apple). Les relations User→données sont en onDelete: Cascade dans le schéma,
 // donc un delete de l'utilisateur efface profil, soirées, favoris, notifications…

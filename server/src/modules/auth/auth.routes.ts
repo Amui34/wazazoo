@@ -8,6 +8,8 @@ import {
   loginSchema,
   verifyEmailSchema,
   resendVerificationSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "./auth.schema.js";
 import * as authService from "./auth.service.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../../lib/jwt.js";
@@ -38,6 +40,27 @@ authRouter.post(
   asyncHandler(async (req, res) => {
     await authService.verifyEmail(req.body.token);
     res.status(200).json({ verified: true });
+  })
+);
+
+authRouter.post(
+  "/forgot-password",
+  authRateLimit,
+  validateBody(forgotPasswordSchema),
+  asyncHandler(async (req, res) => {
+    await authService.requestPasswordReset(req.body.email);
+    // Réponse identique que l'email existe ou non (anti-énumération).
+    res.status(200).json({ ok: true });
+  })
+);
+
+authRouter.post(
+  "/reset-password",
+  tokenRateLimit,
+  validateBody(resetPasswordSchema),
+  asyncHandler(async (req, res) => {
+    await authService.resetPassword(req.body.token, req.body.password);
+    res.status(200).json({ reset: true });
   })
 );
 

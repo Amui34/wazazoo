@@ -3,6 +3,8 @@ import Landing from "./pages/Landing.js";
 import Signup from "./pages/Signup.js";
 import SignupChoice from "./pages/SignupChoice.js";
 import Login from "./pages/Login.js";
+import ForgotPassword from "./pages/ForgotPassword.js";
+import ResetPassword from "./pages/ResetPassword.js";
 import CheckEmail from "./pages/CheckEmail.js";
 import VerifyEmail from "./pages/VerifyEmail.js";
 import ProfileEditor from "./pages/ProfileEditor.js";
@@ -36,6 +38,8 @@ export default function App() {
       <Route path="/inscription/festival" element={<Signup role="FESTIVAL" />} />
       <Route path="/inscription/lieu" element={<Signup role="VENUE" />} />
       <Route path="/connexion" element={<Login />} />
+      <Route path="/mot-de-passe-oublie" element={<ForgotPassword />} />
+      <Route path="/reinitialiser" element={<ResetPassword />} />
       <Route path="/verification-envoyee" element={<CheckEmail />} />
       <Route path="/verifier-email" element={<VerifyEmail />} />
       <Route path="/musiciens/:id" element={<MusicianPublicProfile />} />
