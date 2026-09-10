@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
@@ -14,9 +14,40 @@ import { getApiErrorMessage } from "../lib/api.js";
 // ---- Helpers carte ----------------------------------------------------------
 function FitBounds({ points }: { points: [number, number][] }) {
   const map = useMap();
+  const pointsRef = useRef(points);
+  pointsRef.current = points;
+  // Recalcule la taille de la carte quand son conteneur se dimensionne (le
+  // flex/grid se règle après le montage) — sinon Leaflet reste un petit carré —
+  // puis recadre sur les points une fois la taille stabilisée.
   useEffect(() => {
-    map.invalidateSize();
+    const el = map.getContainer();
+    const invalidate = () => map.invalidateSize();
+    const fit = () => {
+      map.invalidateSize();
+      const pts = pointsRef.current;
+      if (pts.length > 0) {
+        map.fitBounds(L.latLngBounds(pts), { padding: [60, 60], maxZoom: 12 });
+      }
+    };
+    fit();
+    const raf = requestAnimationFrame(fit);
+    const t1 = setTimeout(fit, 250);
+    const t2 = setTimeout(fit, 700);
+    const ro = new ResizeObserver(invalidate);
+    ro.observe(el);
+    window.addEventListener("resize", invalidate);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      ro.disconnect();
+      window.removeEventListener("resize", invalidate);
+    };
+  }, [map]);
+  // Recadre quand la liste de points change (nouveaux événements / filtre).
+  useEffect(() => {
     if (points.length > 0) {
+      map.invalidateSize();
       map.fitBounds(L.latLngBounds(points), { padding: [60, 60], maxZoom: 12 });
     }
   }, [points, map]);
