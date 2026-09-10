@@ -46,15 +46,15 @@ export default function Landing() {
 
         <section className="mx-auto max-w-4xl px-6 py-24 text-center">
           <h1 className="animate-fade-in-up text-4xl font-semibold leading-tight sm:text-5xl">
-            La mise en relation musiciens ↔ lieux, simplifiée
+            Le live près de chez toi
           </h1>
           <p
             className="mx-auto mt-6 max-w-2xl animate-fade-in-up text-lg text-neutral-400"
             style={{ animationDelay: "120ms" }}
           >
-            WAZAZOO connecte les musiciens indépendants avec les restaurants,
-            bars, salles de concert et organisateurs d'événements qui les
-            embauchent. Profils vérifiés, recherche ciblée, contact sécurisé.
+            Concerts, DJ sets, soirées et festivals autour de toi, en temps réel.
+            Trouve quoi faire ce soir sur la carte — et suis tes artistes, lieux et
+            organisateurs préférés pour ne rien rater.
           </p>
           <div
             className="mt-10 flex animate-fade-in-up flex-col items-center justify-center gap-3 sm:flex-row"
