@@ -45,6 +45,16 @@ export type MusicianProfile = {
   instruments: RefOption[];
   equipmentNotes: string | null;
   media: MediaItem[];
+  upcomingEvents?: {
+    id: string;
+    title: string;
+    note: string | null;
+    kind: "ARTIST" | "VENUE" | "ORGANIZER" | "FESTIVAL";
+    lat: number;
+    lng: number;
+    startsAt: string;
+    endsAt: string;
+  }[];
   availabilities: Availability[];
   certificationsCount: number;
   averageRating: number | null;

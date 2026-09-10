@@ -17,6 +17,7 @@ const publicProfileInclude = {
     },
   },
   media: { orderBy: { position: "asc" as const } },
+  events: { orderBy: { startsAt: "asc" as const } },
   availabilities: { orderBy: { startDate: "asc" as const } },
   certifications: {
     where: { status: "CONFIRMED" as const },
@@ -53,6 +54,20 @@ function shapePublicProfile(profile: NonNullable<Awaited<ReturnType<typeof findP
     instruments: profile.musicianProfile?.instruments.map((i) => i.instrument) ?? [],
     equipmentNotes: profile.djProfile?.equipmentNotes ?? null,
     media: profile.media,
+    // Prochaines soirées / lives à venir liés à cette fiche (carte + agenda).
+    upcomingEvents: profile.events
+      .filter((e) => e.endsAt > new Date())
+      .slice(0, 12)
+      .map((e) => ({
+        id: e.id,
+        title: e.title,
+        note: e.note,
+        kind: e.kind,
+        lat: e.lat,
+        lng: e.lng,
+        startsAt: e.startsAt,
+        endsAt: e.endsAt,
+      })),
     availabilities: profile.availabilities
       .filter((a) => a.endDate >= new Date())
       .map((a) => ({ id: a.id, startDate: a.startDate, endDate: a.endDate, isAvailable: a.isAvailable })),

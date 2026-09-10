@@ -181,6 +181,44 @@ export default function MusicianPublicProfile() {
           </Reveal>
         )}
 
+        {/* Prochaines soirées / lives — visible aussi aux visiteurs (découverte) */}
+        {profile.upcomingEvents && profile.upcomingEvents.length > 0 && (
+          <Reveal delay={135} className="mt-8">
+            <h2 className="font-medium">
+              {profile.profileType === "VENUE" || profile.profileType === "ORGANIZER"
+                ? "Prochaines soirées"
+                : "Prochains lives"}
+            </h2>
+            <div className="mt-3 space-y-2">
+              {profile.upcomingEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="flex items-center gap-4 rounded-lg border border-neutral-800 px-4 py-3 transition-colors hover:border-neutral-600"
+                >
+                  <div className="w-14 shrink-0 text-center">
+                    <div className="text-sm font-semibold text-white">
+                      {new Date(ev.startsAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
+                    </div>
+                    <div className="text-xs text-neutral-500">
+                      {new Date(ev.startsAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-white">{ev.title}</p>
+                    {ev.note && <p className="truncate text-xs text-neutral-400">{ev.note}</p>}
+                  </div>
+                  <Link
+                    to="/carte"
+                    className="shrink-0 text-xs font-medium text-violet-300 hover:text-violet-200"
+                  >
+                    Voir sur la carte →
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        )}
+
         {/* Visiteur non connecté : aperçu limité + invitation à débloquer le reste. */}
         {!user && (
           <Reveal
