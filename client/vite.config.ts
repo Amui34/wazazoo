@@ -7,13 +7,15 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      devOptions: { enabled: true },
+      // Désactivé en dev (le service worker ne s'enregistre pas dans certains
+      // environnements d'aperçu et pollue la console) ; actif au build de prod.
+      devOptions: { enabled: false },
       includeAssets: ["favicon.svg", "apple-touch-icon.png", "line-art.svg"],
       manifest: {
-        name: "WAZAZOO — Musiciens & lieux",
+        name: "WAZAZOO — Le live près de chez toi",
         short_name: "WAZAZOO",
         description:
-          "WAZAZOO connecte les musiciens indépendants avec les lieux qui les embauchent : profils vérifiés, recherche ciblée, contact sécurisé.",
+          "Concerts, DJ sets, soirées et festivals autour de toi, en temps réel. Trouve quoi faire ce soir et suis tes lieux et artistes préférés.",
         lang: "fr",
         start_url: "/",
         display: "standalone",
