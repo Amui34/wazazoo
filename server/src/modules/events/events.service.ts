@@ -6,6 +6,21 @@ import type { createEventSchema } from "./events.schema.js";
 
 type Role = "MUSICIAN" | "RECRUITER" | "ADMIN" | "TOURIST" | "ORGANIZER" | "FESTIVAL" | "VENUE";
 
+// Garantit qu'un lieu / organisateur / festival a bien une fiche publique à
+// laquelle rattacher ses soirées (sinon l'événement serait orphelin, invisible
+// sur la fiche et sans notification aux abonnés). Créée si absente.
+async function ensureFicheProfile(userId: string, role: Role) {
+  const existing = await prisma.profile.findUnique({ where: { userId } });
+  if (existing) return existing;
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const base = user?.email.split("@")[0].replace(/[._-]+/g, " ").trim() ?? "";
+  const displayName = base ? base.replace(/\b\w/g, (c) => c.toUpperCase()) : "Établissement";
+  const profileType = role === "ORGANIZER" ? "ORGANIZER" : role === "FESTIVAL" ? "FESTIVAL" : "VENUE";
+  return prisma.profile.create({
+    data: { userId, profileType, displayName, status: "PUBLISHED" },
+  });
+}
+
 export async function createEvent(
   userId: string,
   role: Role,
@@ -58,13 +73,13 @@ export async function createEvent(
       throw new AppError(400, "title_required", "Donne un titre à ton événement.");
     }
     const kind = role === "ORGANIZER" ? "ORGANIZER" : role === "FESTIVAL" ? "FESTIVAL" : "VENUE";
-    // Lieux, organisateurs et festivals ont une fiche : on lie la soirée à leur
-    // fiche (affichage carte + page) et on prévient leurs abonnés.
-    const profile = await prisma.profile.findUnique({ where: { userId } });
+    // Lieux, organisateurs et festivals ont une fiche : on garantit qu'elle
+    // existe et on y lie la soirée (carte + page), puis on prévient les abonnés.
+    const profile = await ensureFicheProfile(userId, role);
     const event = await prisma.event.create({
       data: {
         ownerUserId: userId,
-        profileId: profile?.id ?? null,
+        profileId: profile.id,
         kind,
         title: input.title.trim(),
         note: input.note ?? null,
@@ -74,17 +89,15 @@ export async function createEvent(
         endsAt,
       },
     });
-    if (profile) {
-      const isLiveNow = startsAt <= new Date();
-      const icon = role === "VENUE" ? "🍸" : role === "FESTIVAL" ? "🎪" : "🎉";
-      await notifyFollowers(profile.id, {
-        type: "SOIREE",
-        message: isLiveNow
-          ? `🔴 ${profile.displayName} — « ${event.title} », c'est maintenant !`
-          : `${icon} ${profile.displayName} organise une soirée : « ${event.title} ».`,
-        link: `/musiciens/${profile.id}`,
-      }).catch(() => {});
-    }
+    const isLiveNow = startsAt <= new Date();
+    const icon = role === "VENUE" ? "🍸" : role === "FESTIVAL" ? "🎪" : "🎉";
+    await notifyFollowers(profile.id, {
+      type: "SOIREE",
+      message: isLiveNow
+        ? `🔴 ${profile.displayName} — « ${event.title} », c'est maintenant !`
+        : `${icon} ${profile.displayName} organise une soirée : « ${event.title} ».`,
+      link: `/musiciens/${profile.id}`,
+    }).catch(() => {});
     return event;
   }
 

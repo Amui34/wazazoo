@@ -93,7 +93,9 @@ export default function MusicianPublicProfile() {
                   ? "🎉 Organisateur de soirées"
                   : profile.profileType === "VENUE"
                     ? "🍸 Lieu / Restaurant"
-                    : "Musicien"}{" "}
+                    : profile.profileType === "FESTIVAL"
+                      ? "🎪 Festival"
+                      : "Musicien"}{" "}
               · {profile.city}
             </p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
@@ -185,7 +187,9 @@ export default function MusicianPublicProfile() {
         {profile.upcomingEvents && profile.upcomingEvents.length > 0 && (
           <Reveal delay={135} className="mt-8">
             <h2 className="font-medium">
-              {profile.profileType === "VENUE" || profile.profileType === "ORGANIZER"
+              {profile.profileType === "VENUE" ||
+              profile.profileType === "ORGANIZER" ||
+              profile.profileType === "FESTIVAL"
                 ? "Prochaines soirées"
                 : "Prochains lives"}
             </h2>

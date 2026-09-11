@@ -397,6 +397,22 @@ async function main() {
       });
     }
 
+    // Fiche publique du lieu (type VENUE) : pour que ses soirées remontent sur
+    // sa page + notifient ses abonnés, et qu'il ait un vrai nom (pas l'email).
+    await prisma.profile.upsert({
+      where: { userId: user.id },
+      update: { displayName: recruiter.venueName, city: recruiter.city, profileType: "VENUE", status: "PUBLISHED" },
+      create: {
+        userId: user.id,
+        profileType: "VENUE",
+        displayName: recruiter.venueName,
+        city: recruiter.city,
+        openingHours: "Mar–Dim · 18h–2h",
+        bio: `${recruiter.venueName} — bar & scène live à ${recruiter.city}. Concerts, DJ sets et soirées toute la semaine.`,
+        status: "PUBLISHED",
+      },
+    });
+
     recruiterUsers.push({ user, venue });
   }
 
@@ -710,10 +726,15 @@ async function main() {
     { email: "hello@echofest.demo.giglink.app", name: "Echo Festival", title: "Echo Festival — Open Air", note: "Électro en plein air, food trucks 🌌", lat: 47.2184, lng: -1.5536, start: -4, end: 30 },
   ];
   for (const f of FESTIVALS) {
-    await prisma.user.upsert({
+    const u = await prisma.user.upsert({
       where: { email: f.email },
       update: {},
       create: { email: f.email, passwordHash, role: "FESTIVAL", emailVerifiedAt: new Date() },
+    });
+    await prisma.profile.upsert({
+      where: { userId: u.id },
+      update: { displayName: f.name, profileType: "FESTIVAL", status: "PUBLISHED" },
+      create: { userId: u.id, profileType: "FESTIVAL", displayName: f.name, status: "PUBLISHED" },
     });
   }
 
@@ -738,11 +759,12 @@ async function main() {
     eventCount += 1;
   }
   for (const e of VENUE_EVENTS) {
-    const u = await prisma.user.findUnique({ where: { email: e.email } });
+    const u = await prisma.user.findUnique({ where: { email: e.email }, include: { profile: true } });
     if (!u) continue;
     await prisma.event.create({
       data: {
         ownerUserId: u.id,
+        profileId: u.profile?.id ?? null,
         kind: "VENUE",
         title: e.title,
         note: e.note,
@@ -774,11 +796,12 @@ async function main() {
   }
 
   for (const f of FESTIVALS) {
-    const u = await prisma.user.findUnique({ where: { email: f.email } });
+    const u = await prisma.user.findUnique({ where: { email: f.email }, include: { profile: true } });
     if (!u) continue;
     await prisma.event.create({
       data: {
         ownerUserId: u.id,
+        profileId: u.profile?.id ?? null,
         kind: "FESTIVAL",
         title: f.title,
         note: f.note,

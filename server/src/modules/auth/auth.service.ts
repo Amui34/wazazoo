@@ -60,14 +60,17 @@ export async function signup(input: z.infer<typeof signupSchema>, ipAddress: str
   // Un organisateur et un lieu/restaurant sont des fiches contactables : on les
   // crée dès l'inscription (publiées, nom déduit de l'email) pour qu'ils soient
   // tout de suite trouvables et présentables.
-  if (user.role === "ORGANIZER" || user.role === "VENUE") {
+  if (user.role === "ORGANIZER" || user.role === "VENUE" || user.role === "FESTIVAL") {
     const base = input.email.split("@")[0].replace(/[._-]+/g, " ").trim();
-    const fallback = user.role === "VENUE" ? "Établissement" : "Organisateur";
+    const fallback =
+      user.role === "VENUE" ? "Établissement" : user.role === "FESTIVAL" ? "Festival" : "Organisateur";
     const displayName = base ? base.replace(/\b\w/g, (c) => c.toUpperCase()) : fallback;
+    const profileType =
+      user.role === "VENUE" ? "VENUE" : user.role === "FESTIVAL" ? "FESTIVAL" : "ORGANIZER";
     await prisma.profile.create({
       data: {
         userId: user.id,
-        profileType: user.role === "VENUE" ? "VENUE" : "ORGANIZER",
+        profileType,
         displayName,
         status: "PUBLISHED",
       },
