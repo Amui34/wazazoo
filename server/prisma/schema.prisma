@@ -205,6 +205,7 @@ model Profile {
   certifications  Certification[]
   contactRequests ContactRequest[] @relation("MusicianRequests")
   events          Event[]          @relation("ProfileEvents")
+  lineupAppearances EventArtist[]  @relation("Lineup")
   followers       Follow[]         @relation("ProfileFollowers")
   claimedListing  VenueListing?    @relation("VenueClaim")
 
@@ -235,9 +236,25 @@ model Event {
   endsAt      DateTime
   createdAt   DateTime  @default(now())
 
+  lineup      EventArtist[]
+
   @@index([startsAt])
   @@index([endsAt])
   @@map("events")
+}
+
+// Artistes à l'affiche d'une soirée (collaboration lieu/orga ↔ artistes qui
+// jouent). Un même artiste apparaît alors sur la fiche du lieu ET sur la sienne.
+model EventArtist {
+  id        String   @id @default(uuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  profileId String
+  profile   Profile  @relation("Lineup", fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, profileId])
+  @@map("event_artists")
 }
 
 // 1-1 extension of Profile, only present when profileType = MUSICIAN.
