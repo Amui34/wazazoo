@@ -99,6 +99,11 @@ export default function MusicianPublicProfile() {
               · {profile.city}
             </p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
+              {(profile.profileType === "VENUE" ||
+                profile.profileType === "ORGANIZER" ||
+                profile.profileType === "FESTIVAL") && (
+                <Badge tone="success">✓ Géré par l'établissement</Badge>
+              )}
               {profile.certificationsCount > 0 && (
                 <Badge tone="success">✓ {profile.certificationsCount} certification(s)</Badge>
               )}
