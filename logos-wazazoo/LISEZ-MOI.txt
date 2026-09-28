@@ -1,0 +1,11 @@
+LOGOS WAZAZOO — ce qui est réellement utilisé dans l'app
+
+1-mascotte-*  → LOGO PRINCIPAL « tête à deux vinyles »
+   • icone-app        : icône sur l'écran d'accueil iPhone
+   • entete-mobile    : logo en haut des écrans de l'app (fond nuit)
+   • favicon-web.svg  : icône d'onglet du site (vecteur)
+2-pin-note      → 2e LOGO : pin de carte rose + note (univers « quoi faire autour de toi »)
+                   (badge onboarding + base des pins d'événements)
+3-micro-onglet  → icône de l'onglet « Carte » (barre du bas, mobile)
+4-wordmark-splash → écriture « wazazoo » aux O désalignés (écran de démarrage)
+5-pins-evenements → pins de la carte par catégorie (Live/DJ/Festival/Soirée)

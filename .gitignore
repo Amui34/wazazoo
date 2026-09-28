@@ -19,3 +19,5 @@ server/uploads/*
 # Config outillage local
 .claude/
 db-backup-*.sql
+*.p8
+AuthKey_*.p8
