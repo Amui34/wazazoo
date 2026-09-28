@@ -1,0 +1,36 @@
+# =============================================================================
+# WAZAZOO — Caddy interne du conteneur (HTTP :80).
+# Le TLS est géré par le proxy partagé (amui-proxy), pas ici.
+#
+# Rôle :
+#   • sert le front React (build Vite, SPA)
+#   • proxifie /api et /uploads vers le backend (Railway) SUR LE MÊME DOMAINE
+#     → les cookies d'auth (httpOnly, sameSite=lax) restent « first-party »,
+#       donc la connexion web fonctionne sans CORS ni cookies tiers.
+# =============================================================================
+
+{
+	# Pas de HTTPS interne : le proxy amont s'en charge.
+	auto_https off
+}
+
+:80 {
+	encode zstd gzip
+
+	# --- API + fichiers uploadés → backend Railway ---------------------------
+	# On force le Host attendu par Railway (routage par nom d'hôte côté edge).
+	@backend path /api/* /uploads/*
+	handle @backend {
+		reverse_proxy https://wazazoo-api-production.up.railway.app {
+			header_up Host wazazoo-api-production.up.railway.app
+		}
+	}
+
+	# --- Front React (SPA) ---------------------------------------------------
+	# Repli sur index.html pour les routes gérées côté client (react-router).
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

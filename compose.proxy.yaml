@@ -1,0 +1,21 @@
+# =============================================================================
+# WAZAZOO — derrière le proxy partagé (amui-proxy)
+# Aucun port publié : le proxy Caddy joint l'app via l'alias « wazazoo-app »
+# sur le réseau Docker « web ».
+#   wazazoo.pro → wazazoo-app:80  (front React ; /api proxifié vers Railway)
+#
+#   docker compose -f compose.proxy.yaml up -d --build
+# =============================================================================
+
+services:
+  wazazoo:
+    build: .
+    restart: unless-stopped
+    networks:
+      web:
+        aliases:
+          - wazazoo-app
+
+networks:
+  web:
+    external: true

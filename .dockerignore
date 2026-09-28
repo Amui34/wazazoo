@@ -1,0 +1,21 @@
+# Ne pas envoyer ces éléments au contexte de build Docker (image + rapidité).
+**/node_modules
+**/dist
+**/build
+client/dev-dist
+server
+shared
+docs
+logos-wazazoo
+.git
+.github
+.claude
+*.md
+*.p8
+AuthKey_*.p8
+.env
+.env.*
+!*.env.example
+db-backup-*.sql
+**/.DS_Store
+docker-compose.yml
